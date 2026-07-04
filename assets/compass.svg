@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Journey compass">
+  <rect width="512" height="512" rx="96" fill="#243832"/>
+  <circle cx="256" cy="256" r="184" fill="#f6ecd8" stroke="#d69a2d" stroke-width="18"/>
+  <circle cx="256" cy="256" r="132" fill="none" stroke="#2f7569" stroke-width="10" stroke-dasharray="12 16"/>
+  <path d="M256 60 286 226 452 256 286 286 256 452 226 286 60 256 226 226Z" fill="#b9432f"/>
+  <path d="M256 110 274 238 402 256 274 274 256 402 238 274 110 256 238 238Z" fill="#fff8e8"/>
+  <circle cx="256" cy="256" r="38" fill="#243832" stroke="#d69a2d" stroke-width="10"/>
+  <path d="M251 171h10v54h-10zm0 116h10v54h-10zM171 251h54v10h-54zm116 0h54v10h-54z" fill="#243832"/>
+</svg>
