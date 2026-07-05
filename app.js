@@ -69,9 +69,10 @@
     return `
       <main class="screen title-screen">
         <section class="title-copy">
-          <p class="eyebrow">Offline adventure PWA</p>
+          <img class="app-logo" src="assets/compass.svg" alt="Frontier Trails compass and crossed pistols logo">
+          <p class="eyebrow">Offline Wild West PWA</p>
           <h1>Journey to the West</h1>
-          <p class="subtitle">Choose a hero, unlock six books, use a one-action die roll when your stats fall short, and travel a mythic western road that keeps your progress on this device.</p>
+          <p class="subtitle">Choose a frontier hero, unlock eleven books, follow boxed section numbers, and ride paper-map trails that keep your progress on this device.</p>
           <div class="menu-grid" role="list">
             <button class="primary" data-action="new-game">New Game</button>
             ${hasSave ? '<button class="secondary" data-action="continue-game">Continue Game</button>' : ""}
@@ -79,9 +80,12 @@
             <button data-action="codeword">Codeword Hack</button>
             <button data-action="maps">Maps</button>
             ${settings.onlineMode ? '<button data-action="online">Online</button>' : ""}
+            <button data-action="export-saves"${hasSave ? "" : " disabled"}>Export Saves</button>
+            <button data-action="import-saves">Import Saves</button>
             <button data-action="settings">Settings</button>
             <button class="quiet" data-action="exit">Exit</button>
           </div>
+          <input class="visually-hidden" id="importSavesFile" type="file" accept="application/json,.json" data-import-saves>
           ${toastHtml()}
         </section>
         <section class="hero-art" aria-label="A compass over the western road"></section>
@@ -92,7 +96,16 @@
   function renderHeroSelect() {
     return `
       <main class="screen">
-        ${topbar("Choose Your Hero", "Each hero starts from the same base stats, then gains a different bonus and penalty.")}
+        ${topbar("Choose Your Hero", "Name your character, or roll a random proper name, then choose a hero class.")}
+        <section class="panel hero-name-panel">
+          <div class="form-row">
+            <label for="customHeroName">Character name</label>
+            <input id="customHeroName" maxlength="28" placeholder="Type a proper name or roll one">
+          </div>
+          <div class="actions">
+            <button class="secondary" data-action="random-name">Random Name</button>
+          </div>
+        </section>
         <section class="hero-grid">
           ${data.heroes.map((hero) => heroCard(hero)).join("")}
         </section>
@@ -102,7 +115,7 @@
   }
 
   function heroCard(hero) {
-    const stats = buildHeroStats(hero);
+    const stats = applyItemStatModifiers(buildHeroStats(hero), hero.startingItems);
     return `
       <article class="hero-card">
         <header>
@@ -110,11 +123,11 @@
             <h3>${escapeHtml(hero.name)}</h3>
             <p class="role">${escapeHtml(hero.role)}</p>
           </div>
-          <span class="pill">${hero.startingItems.length} item</span>
+          <span class="pill">${hero.startingItems.length} item${hero.startingItems.length === 1 ? "" : "s"}</span>
         </header>
         <p>${escapeHtml(hero.description)}</p>
         ${statsList(stats)}
-        <p class="meta">Starts with ${formatList(hero.startingItems)}.</p>
+        <p class="meta">Starts with ${formatList(hero.startingItems)}. Gear bonuses are included above.</p>
         <button class="primary" data-action="start-hero" data-hero-id="${hero.id}">Start as ${escapeHtml(hero.name)}</button>
       </article>
     `;
@@ -126,14 +139,17 @@
     const section = getSection(save.currentBookId, save.currentSectionNumber);
     if (!section) return missingSaveScreen("Section missing", "This book route exists, but that section could not be found.");
     const hero = getHero(save.heroId);
+    const displayName = characterName(save);
+    const effectiveStats = getEffectiveStats(save);
     return `
       <main class="screen game-layout">
         ${screenToolbar()}
         <aside class="sidebar">
           <section class="panel">
-            <h2>${escapeHtml(hero.name)}</h2>
-            <p class="role">${escapeHtml(hero.role)}</p>
-            ${statsList(save.stats)}
+            <h2>${escapeHtml(displayName)}</h2>
+            <p class="role">${escapeHtml(hero.name)} / ${escapeHtml(hero.role)}</p>
+            ${statsList(effectiveStats)}
+            ${gearBonusSummary(save)}
             ${upgradePanel(save)}
           </section>
           <section class="panel">
@@ -160,10 +176,10 @@
               <h1>${escapeHtml(section.title)}</h1>
             </div>
           </header>
-          <div class="story-scene" data-art="${escapeHtml(section.art || "Journey")}"></div>
+          <div class="story-scene" data-book="${save.currentBookId}" data-art="${escapeHtml(section.art || "Journey")}"></div>
           <p class="story-text">${escapeHtml(section.text)}</p>
           <div class="choices">
-            ${section.choices.map((choice, index) => choiceButton(save, choice, index)).join("")}
+            ${(section.choices || []).map((choice, index) => choiceButton(save, choice, index)).join("")}
           </div>
           ${toastHtml()}
         </section>
@@ -193,10 +209,15 @@
       ? `<button class="secondary" data-action="roll-stat" data-choice-index="${index}">Roll d6 for ${escapeHtml(check.stat)}</button>`
       : "";
     return `
-      <button class="choice-card${lockedClass}" data-action="choose" data-choice-index="${index}"${disabled}>
-        <strong>${escapeHtml(choice.label)}</strong>
-        <span>${escapeHtml(reason)}</span>
-      </button>
+      <div class="choice-row${lockedClass}">
+        <button class="choice-number" data-action="choose" data-choice-index="${index}"${disabled} aria-label="Go to ${escapeHtml(choiceTargetLabel(choice))}">
+          ${escapeHtml(choiceTargetLabel(choice))}
+        </button>
+        <p>
+          <strong>${escapeHtml(choice.label)}</strong>
+          <span>${escapeHtml(reason)}</span>
+        </p>
+      </div>
       ${rollButton}
     `;
   }
@@ -219,7 +240,8 @@
     const book = getBook(save.currentBookId);
     return `
       <article class="save-card">
-        <h3>${escapeHtml(hero.name)}</h3>
+        <h3>${escapeHtml(characterName(save))}</h3>
+        <p class="role">${escapeHtml(hero.name)}</p>
         <p>${escapeHtml(book.title)}, Section ${save.currentSectionNumber}</p>
         <p class="meta">Updated ${new Date(save.updatedAt).toLocaleString()}</p>
         <div class="actions">
@@ -295,9 +317,9 @@
     if (save && !getActiveSave()) setActiveSaveId(save.saveId);
     return `
       <main class="screen">
-        ${topbar("Codeword Hack", "Enter the one cheat code to max out the current hero and open every route.")}
+        ${topbar("Codeword Hack", "Enter the one cheat code to max out the current hero and open every trail.")}
         <section class="panel">
-          ${save ? `<p class="meta">Active save: ${escapeHtml(getHero(save.heroId).name)}, ${escapeHtml(getBook(save.currentBookId).title)}.</p>` : '<p>Start or load a game before entering the cheat code.</p>'}
+          ${save ? `<p class="meta">Active save: ${escapeHtml(characterName(save))}, ${escapeHtml(getBook(save.currentBookId).title)}.</p>` : '<p>Start or load a game before entering the cheat code.</p>'}
           <form data-form="codeword">
             <div class="form-row">
               <label for="codeword">Codeword</label>
@@ -320,7 +342,7 @@
     if (save && !getActiveSave()) setActiveSaveId(save.saveId);
     return `
       <main class="screen">
-        ${topbar("Maps", "Unlocked books and visited sections appear here. Each book is ready for 500 sections.")}
+        ${topbar("World Maps", "Each book has its own world map. Visited landmarks and sections can be used as travel routes.")}
         ${save ? renderMapForSave(save) : '<section class="panel"><p>No save to map yet.</p><button class="primary" data-action="new-game">Start New Game</button></section>'}
         ${toastHtml()}
       </main>
@@ -384,22 +406,66 @@
             .filter((entry) => entry.startsWith(`${book.id}:`))
             .map((entry) => Number(entry.split(":")[1]))
             .sort((a, b) => a - b);
-          const sectionNumbers = Object.keys(book.sections).map(Number).sort((a, b) => a - b);
           return `
-            <article class="book-card${unlocked ? "" : " locked"}">
+            <article class="book-card map-card${unlocked ? "" : " locked"}">
               <h3>${escapeHtml(book.title)}</h3>
               <p>${unlocked ? "Unlocked" : escapeHtml(book.unlockText)}</p>
               <p class="meta">${visited.length} visited / ${book.sectionCount} planned sections.</p>
-              <div class="section-grid">
-                ${sectionNumbers.map((sectionNumber) => {
-                  const seen = visited.includes(sectionNumber);
-                  return `<button class="section-node${seen ? " visited" : ""}${unlocked ? "" : " locked"}" data-action="jump-section" data-book-id="${book.id}" data-section-number="${sectionNumber}"${unlocked && seen ? "" : " disabled"}>Section ${sectionNumber}</button>`;
-                }).join("")}
-              </div>
+              ${worldMapHtml(book, visited, unlocked)}
+              ${mapSectionLinks(book, visited, unlocked)}
             </article>
           `;
         }).join("")}
       </section>
+    `;
+  }
+
+  function worldMapHtml(book, visited, unlocked) {
+    const map = data.worldMaps && data.worldMaps[book.id];
+    if (!map) return "";
+    return `
+      <div class="world-map" data-book="${book.id}" aria-label="${escapeHtml(map.name)} map">
+        <div class="map-route"></div>
+        ${map.landmarks.map((landmark) => {
+          const seen = visited.includes(landmark.section);
+          return `
+            <button
+              class="map-pin${seen ? " visited" : ""}"
+              style="--x:${landmark.x}%; --y:${landmark.y}%"
+              data-action="jump-section"
+              data-book-id="${book.id}"
+              data-section-number="${landmark.section}"
+              ${unlocked && seen ? "" : " disabled"}
+              title="${escapeHtml(landmark.label)} / Section ${landmark.section}"
+            >
+              <span>${landmark.section}</span>
+            </button>
+          `;
+        }).join("")}
+        <div class="map-name">${escapeHtml(map.name)}</div>
+      </div>
+      <ul class="map-regions">
+        ${map.regions.map((region) => `<li>${escapeHtml(region)}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+  function mapSectionLinks(book, visited, unlocked) {
+    const activeWindow = Array.from(new Set([
+      1,
+      ...visited.slice(-8),
+      Math.min(book.sectionCount, Math.max(1, (visited[visited.length - 1] || 1) + 1)),
+      book.sectionCount
+    ])).sort((a, b) => a - b);
+    return `
+      <div class="section-grid compact-sections">
+        ${activeWindow.map((sectionNumber) => {
+          const seen = visited.includes(sectionNumber);
+          const current = getActiveSave();
+          const isCurrent = current && current.currentBookId === book.id && current.currentSectionNumber === sectionNumber;
+          return `<button class="section-node${seen ? " visited" : ""}${isCurrent ? " current" : ""}${unlocked ? "" : " locked"}" data-action="jump-section" data-book-id="${book.id}" data-section-number="${sectionNumber}"${unlocked && seen ? "" : " disabled"}>Section ${sectionNumber}</button>`;
+        }).join("")}
+      </div>
     `;
   }
 
@@ -437,7 +503,7 @@
     return `
       <header class="topbar">
         <div>
-          <p class="eyebrow">Journey to the West</p>
+          <p class="eyebrow">Frontier Trails</p>
           <h1>${escapeHtml(title)}</h1>
           <p class="subtitle">${escapeHtml(subtitle)}</p>
         </div>
@@ -476,6 +542,7 @@
     if (action === "online") return openOnline();
     if (action === "exit") return setView("exit");
     if (action === "continue-game") return continueGame();
+    if (action === "random-name") return fillRandomHeroName();
     if (action === "start-hero") return startHero(button.dataset.heroId);
     if (action === "choose") return choose(Number(button.dataset.choiceIndex));
     if (action === "save-now") return saveNow();
@@ -489,6 +556,8 @@
     if (action === "jump-section") return jumpSection(Number(button.dataset.bookId), Number(button.dataset.sectionNumber));
     if (action === "submit-score") return submitScore();
     if (action === "refresh-online") return refreshOnline();
+    if (action === "export-saves") return exportSaves();
+    if (action === "import-saves") return promptImportSaves();
   }
 
   function onSubmit(event) {
@@ -508,6 +577,8 @@
   }
 
   function onChange(event) {
+    const importInput = event.target.closest("[data-import-saves]");
+    if (importInput) return importSaves(importInput);
     const control = event.target.closest("[data-setting]");
     if (!control) return;
     const settings = loadSettings();
@@ -528,9 +599,11 @@
   function startHero(heroId) {
     const hero = getHero(heroId);
     if (!hero) return setView("heroes", "That hero could not be found.");
+    const customName = cleanCharacterName(document.querySelector("#customHeroName") && document.querySelector("#customHeroName").value);
     const save = {
       saveId: `save-${Date.now()}`,
-      heroId,
+      heroId: hero.id,
+      characterName: customName || randomHeroName(),
       currentBookId: 1,
       currentSectionNumber: 1,
       stats: buildHeroStats(hero),
@@ -549,7 +622,7 @@
     enterSection(save, 1, 1);
     upsertSave(save);
     setActiveSaveId(save.saveId);
-    setView("game", "Your road begins.");
+    setView("game", `${save.characterName}'s road begins.`);
   }
 
   function continueGame() {
@@ -598,7 +671,7 @@
     pushUndo(save);
     applyEffects(save, choice.effects);
     clearRollBoost();
-    enterSection(save, choice.target.book, choice.target.section);
+    enterSection(save, choiceTargetBook(save, choice), choice.target.section);
     upsertSave(save);
     setView("game");
   }
@@ -663,6 +736,56 @@
     setView("codeword", `${code} applied. ${entry.description}`);
   }
 
+  function exportSaves() {
+    const saves = getSaves();
+    if (!saves.length) return setView("title", "No saves to export yet.");
+    const payload = {
+      app: "Journey to the West: Frontier Trails",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      saves,
+      settings: loadSettings()
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `frontier-trails-saves-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setView("title", "Save export downloaded.");
+  }
+
+  function promptImportSaves() {
+    const input = document.querySelector("#importSavesFile");
+    if (input) input.click();
+  }
+
+  function importSaves(input) {
+    const file = input.files && input.files[0];
+    input.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const payload = JSON.parse(String(reader.result || "{}"));
+        const incoming = Array.isArray(payload) ? payload : payload.saves;
+        if (!Array.isArray(incoming) || !incoming.length) throw new Error("No saves found.");
+        const imported = incoming.map(normalizeSave).filter(Boolean);
+        if (!imported.length) throw new Error("No valid saves found.");
+        const existing = getSaves().filter((save) => !imported.some((entry) => entry.saveId === save.saveId));
+        localStorage.setItem(savesKey, JSON.stringify([...existing, ...imported]));
+        setActiveSaveId(imported[0].saveId);
+        setView("title", `${imported.length} save${imported.length === 1 ? "" : "s"} imported.`);
+      } catch {
+        setView("title", "That save export could not be imported.");
+      }
+    };
+    reader.readAsText(file);
+  }
+
   async function installApp() {
     if (!deferredInstallPrompt) return setView("settings", "Use the browser install menu if the install button is not available.");
     deferredInstallPrompt.prompt();
@@ -690,7 +813,7 @@
     const settings = loadSettings();
     const score = {
       playerName: cleanPlayerName(settings.playerName),
-      heroName: getHero(save.heroId).name,
+      heroName: characterName(save),
       money: save.totalMoneyCollected || 0,
       updatedAt: new Date().toISOString()
     };
@@ -722,7 +845,7 @@
     const settings = loadSettings();
     const chatMessage = {
       playerName: cleanPlayerName(settings.playerName),
-      heroName: getHero(save.heroId).name,
+      heroName: characterName(save),
       message: message.slice(0, 160),
       createdAt: new Date().toISOString()
     };
@@ -808,9 +931,10 @@
 
   function checkRequirements(save, requirements = {}, boost = null) {
     if (!requirements) return { ok: true, reason: "" };
+    const effectiveStats = getEffectiveStats(save);
     if (requirements.stats) {
       const statFailures = Object.entries(requirements.stats).filter(([stat, value]) => {
-        const boostedValue = (save.stats[stat] || 0) + (boost && boost.stat === stat ? boost.amount : 0);
+        const boostedValue = (effectiveStats[stat] || 0) + (boost && boost.stat === stat ? boost.amount : 0);
         return boostedValue < value;
       });
       if (statFailures.length) {
@@ -823,6 +947,9 @@
           required: value
         };
       }
+    }
+    if (requirements.mount && !hasMount(save)) {
+      return { ok: false, reason: "Requires a mount to run from this battle." };
     }
     for (const [key, label, source] of [
       ["items", "item", save.inventory],
@@ -844,10 +971,43 @@
   function getSaves() {
     try {
       const saves = JSON.parse(localStorage.getItem(savesKey) || "[]");
-      return Array.isArray(saves) ? saves : [];
+      return Array.isArray(saves) ? saves.map(normalizeSave).filter(Boolean) : [];
     } catch {
       return [];
     }
+  }
+
+  function normalizeSave(save) {
+    if (!save || typeof save !== "object") return null;
+    const hero = getHero(save.heroId);
+    const now = new Date().toISOString();
+    const baseStats = { ...buildHeroStats(hero), ...(save.stats || {}) };
+    const inventory = Array.isArray(save.inventory) ? save.inventory : hero.startingItems;
+    const requestedBook = Number(save.currentBookId) || 1;
+    const book = getBook(requestedBook);
+    const requestedSection = Number(save.currentSectionNumber) || 1;
+    const sectionNumber = book.sections[requestedSection] ? requestedSection : 1;
+    const unlockedBooks = unique(Array.isArray(save.unlockedBooks) ? save.unlockedBooks.map(Number).filter(Boolean) : [1]);
+    if (!unlockedBooks.includes(book.id)) unlockedBooks.push(book.id);
+    return {
+      saveId: save.saveId || `save-${Date.now()}`,
+      heroId: hero.id,
+      characterName: cleanCharacterName(save.characterName) || hero.name,
+      currentBookId: book.id,
+      currentSectionNumber: sectionNumber,
+      stats: baseStats,
+      inventory: unique(inventory),
+      money: Number(save.money) || 0,
+      totalMoneyCollected: Number(save.totalMoneyCollected) || Number(save.money) || 0,
+      flags: unique(Array.isArray(save.flags) ? save.flags : []),
+      codewords: unique(Array.isArray(save.codewords) ? save.codewords : []),
+      unlockedBooks,
+      visitedSections: unique(Array.isArray(save.visitedSections) ? save.visitedSections : []),
+      upgradePoints: Number(save.upgradePoints) || 0,
+      history: Array.isArray(save.history) ? save.history : [],
+      createdAt: save.createdAt || now,
+      updatedAt: save.updatedAt || now
+    };
   }
 
   function upsertSave(save) {
@@ -911,13 +1071,53 @@
     return stats;
   }
 
+  function getEffectiveStats(save) {
+    return applyItemStatModifiers(save.stats || {}, save.inventory || []);
+  }
+
+  function applyItemStatModifiers(stats, inventory = []) {
+    const result = { ...stats };
+    inventory.forEach((item) => {
+      const modifiers = data.itemStatModifiers && data.itemStatModifiers[item];
+      if (!modifiers) return;
+      Object.entries(modifiers).forEach(([stat, amount]) => {
+        if (statNames.includes(stat)) result[stat] = (result[stat] || 0) + amount;
+      });
+    });
+    return result;
+  }
+
+  function gearBonusSummary(save) {
+    const bonuses = {};
+    (save.inventory || []).forEach((item) => {
+      const modifiers = data.itemStatModifiers && data.itemStatModifiers[item];
+      if (!modifiers) return;
+      Object.entries(modifiers).forEach(([stat, amount]) => {
+        bonuses[stat] = (bonuses[stat] || 0) + amount;
+      });
+    });
+    const parts = Object.entries(bonuses)
+      .filter(([, amount]) => amount)
+      .map(([stat, amount]) => `${stat} +${amount}`);
+    return parts.length ? `<p class="meta">Gear bonuses: ${escapeHtml(parts.join(", "))}.</p>` : '<p class="meta">No gear stat bonuses yet.</p>';
+  }
+
+  function hasMount(save) {
+    const mounts = data.mounts || [];
+    return (save.inventory || []).some((item) => mounts.includes(item));
+  }
+
   function maxOutSave(save) {
     statNames.forEach((stat) => {
       save.stats[stat] = 99;
     });
     save.upgradePoints = 99;
-    addMoney(save, 9999);
+    save.money = 999999;
+    save.totalMoneyCollected = Math.max(save.totalMoneyCollected || 0, 999999);
     addUnique(save.unlockedBooks, data.books.map((book) => book.id));
+    addUnique(save.inventory, data.weapons || []);
+    addUnique(save.inventory, data.mounts || []);
+    addUnique(save.inventory, data.legendaryItems || []);
     addUnique(save.inventory, collectEffectValues("addItems"));
     addUnique(save.flags, collectEffectValues("addFlags"));
     addUnique(save.visitedSections, data.books.flatMap((book) =>
@@ -1029,12 +1229,37 @@
     return cleaned || "Wandering Hero";
   }
 
+  function cleanCharacterName(name) {
+    return String(name || "")
+      .replace(/[^a-zA-Z0-9 '\-]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 28);
+  }
+
+  function characterName(save) {
+    return cleanCharacterName(save && save.characterName) || getHero(save && save.heroId).name;
+  }
+
+  function randomHeroName() {
+    const names = data.randomHeroNames || ["Dusty Rider"];
+    return names[Math.floor(Math.random() * names.length)];
+  }
+
+  function fillRandomHeroName() {
+    const input = document.querySelector("#customHeroName");
+    if (input) {
+      input.value = randomHeroName();
+      input.focus();
+    }
+  }
+
   function collectEffectValues(effectName) {
     const values = [];
     data.books.forEach((book) => {
       Object.values(book.sections).forEach((section) => {
         addUnique(values, section.effects && section.effects[effectName]);
-        section.choices.forEach((choice) => addUnique(values, choice.effects && choice.effects[effectName]));
+        (section.choices || []).forEach((choice) => addUnique(values, choice.effects && choice.effects[effectName]));
       });
     });
     return values;
@@ -1074,7 +1299,7 @@
   }
 
   function listPills(items, emptyText) {
-    if (!items.length) return `<p class="meta">${emptyText}</p>`;
+    if (!items || !items.length) return `<p class="meta">${emptyText}</p>`;
     return `<ul class="inventory-list">${items.map((item) => `<li class="pill">${escapeHtml(item)}</li>`).join("")}</ul>`;
   }
 
@@ -1107,6 +1332,15 @@
 
   function sectionKey(bookId, sectionNumber) {
     return `${bookId}:${sectionNumber}`;
+  }
+
+  function choiceTargetLabel(choice) {
+    if (!choice || !choice.target) return "?";
+    return choice.target.book ? `B${choice.target.book}-${choice.target.section}` : String(choice.target.section);
+  }
+
+  function choiceTargetBook(save, choice) {
+    return Number(choice && choice.target && choice.target.book) || save.currentBookId;
   }
 
   function escapeHtml(value) {

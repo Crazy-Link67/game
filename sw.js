@@ -1,12 +1,15 @@
-const cacheName = "journey-west-v3";
+const cacheName = "journey-west-v12";
 const filesToCache = [
   "./",
   "index.html",
+  "game-reference.html",
+  "pictures.css",
   "styles.css",
   "data.js",
   "app.js",
   "manifest.webmanifest",
-  "assets/compass.svg"
+  "assets/compass.svg",
+  "assets/frontier-picture-atlas.png"
 ];
 
 self.addEventListener("install", (event) => {
@@ -36,7 +39,10 @@ self.addEventListener("fetch", (event) => {
           caches.open(cacheName).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match("index.html"));
+        .catch(() => {
+          if (event.request.mode === "navigate") return caches.match("index.html");
+          return Response.error();
+        });
     })
   );
 });

@@ -1,9 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Journey compass">
-  <rect width="512" height="512" rx="96" fill="#243832"/>
-  <circle cx="256" cy="256" r="184" fill="#f6ecd8" stroke="#d69a2d" stroke-width="18"/>
-  <circle cx="256" cy="256" r="132" fill="none" stroke="#2f7569" stroke-width="10" stroke-dasharray="12 16"/>
-  <path d="M256 60 286 226 452 256 286 286 256 452 226 286 60 256 226 226Z" fill="#b9432f"/>
-  <path d="M256 110 274 238 402 256 274 274 256 402 238 274 110 256 238 238Z" fill="#fff8e8"/>
-  <circle cx="256" cy="256" r="38" fill="#243832" stroke="#d69a2d" stroke-width="10"/>
-  <path d="M251 171h10v54h-10zm0 116h10v54h-10zM171 251h54v10h-54zm116 0h54v10h-54z" fill="#243832"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Frontier Trails compass and crossed pistols logo">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#d28a45"/>
+      <stop offset="0.48" stop-color="#a33b22"/>
+      <stop offset="1" stop-color="#2a1a10"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff0c8"/>
+      <stop offset="0.5" stop-color="#c27a2f"/>
+      <stop offset="1" stop-color="#6b543e"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="92" fill="url(#sky)"/>
+  <circle cx="256" cy="256" r="186" fill="#fff0c8" stroke="#2a1a10" stroke-width="18"/>
+  <circle cx="256" cy="256" r="145" fill="#ead5aa" stroke="#a8783e" stroke-width="8" stroke-dasharray="14 14"/>
+  <path d="M256 72 284 226 440 256 284 286 256 440 228 286 72 256 228 226Z" fill="#a33b22"/>
+  <path d="M256 124 272 240 388 256 272 272 256 388 240 272 124 256 240 240Z" fill="#fff7df"/>
+  <g transform="rotate(-38 256 276)">
+    <path d="M136 274h165c18 0 34 11 41 28l9 21h-56l-14-18H136z" fill="#2a1a10"/>
+    <path d="M318 271c33-12 64-10 78 8 10 13 7 31-10 49l-42-18c6-8 6-15 1-20-6-7-18-8-29-4z" fill="#2a1a10"/>
+    <path d="M124 257h210c14 0 25 8 29 21H124z" fill="url(#metal)"/>
+    <circle cx="156" cy="277" r="10" fill="#fff0c8"/>
+  </g>
+  <g transform="rotate(38 256 276)">
+    <path d="M136 274h165c18 0 34 11 41 28l9 21h-56l-14-18H136z" fill="#2a1a10"/>
+    <path d="M318 271c33-12 64-10 78 8 10 13 7 31-10 49l-42-18c6-8 6-15 1-20-6-7-18-8-29-4z" fill="#2a1a10"/>
+    <path d="M124 257h210c14 0 25 8 29 21H124z" fill="url(#metal)"/>
+    <circle cx="156" cy="277" r="10" fill="#fff0c8"/>
+  </g>
+  <circle cx="256" cy="256" r="42" fill="#2a1a10" stroke="#c27a2f" stroke-width="10"/>
+  <circle cx="256" cy="256" r="14" fill="#fff0c8"/>
 </svg>

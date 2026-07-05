@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Journey to the West: Frontier Trails Reference</title>
+    <link rel="icon" href="assets/compass.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="pictures.css">
+    <style>
+      :root {
+        --bg: #ead5aa;
+        --paper: #fff0c8;
+        --ink: #2a1a10;
+        --muted: #6b543e;
+        --line: #a8783e;
+        --accent: #a33b22;
+        --accent-2: #3f6f5c;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        font: 16px/1.5 Georgia, "Times New Roman", serif;
+        background:
+          repeating-linear-gradient(90deg, transparent 0 20px, rgba(94, 68, 35, 0.08) 20px 21px),
+          linear-gradient(135deg, var(--bg), #c99558);
+      }
+
+      main {
+        width: min(1180px, calc(100% - 28px));
+        margin: 0 auto;
+        padding: 28px 0 48px;
+      }
+
+      header,
+      section,
+      details {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 45%),
+          repeating-linear-gradient(0deg, transparent 0 15px, rgba(94, 68, 35, 0.07) 15px 16px),
+          var(--paper);
+        box-shadow: 0 18px 44px rgba(42, 26, 16, 0.16);
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: 110px 1fr auto;
+        gap: 18px;
+        align-items: center;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      img {
+        width: 96px;
+        height: 96px;
+        border-radius: 22px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 6px;
+        font-size: clamp(2rem, 6vw, 4.2rem);
+        line-height: 0.95;
+      }
+
+      a,
+      button {
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: var(--ink);
+        background: var(--paper);
+        font: inherit;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .primary {
+        color: #fff7df;
+        border-color: transparent;
+        background: var(--accent);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+
+      section,
+      details {
+        padding: 16px;
+        margin: 12px 0;
+      }
+
+      summary {
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .pill-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+      }
+
+      .pill-list li {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 10px;
+        background: rgba(255, 255, 255, 0.28);
+        font: 700 0.82rem/1.3 Arial, sans-serif;
+      }
+
+      .section-list {
+        display: grid;
+        gap: 8px;
+        max-height: 70vh;
+        overflow: auto;
+        padding-right: 6px;
+      }
+
+      .section-entry h3 {
+        margin-bottom: 4px;
+      }
+
+      .choice {
+        margin: 6px 0 0;
+        padding-left: 18px;
+      }
+
+      input {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: var(--ink);
+        background: var(--paper);
+        font: inherit;
+      }
+
+      @media (max-width: 720px) {
+        header {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="assets/compass.svg" alt="Frontier Trails compass and crossed pistols logo">
+        <div>
+          <p class="muted">Playable Game Reference</p>
+          <h1>Journey to the West: Frontier Trails</h1>
+          <p class="muted">Logo, heroes, gear, maps, codeword, books, and every generated numbered section.</p>
+        </div>
+        <a class="primary" href="index.html">Open Game</a>
+      </header>
+
+      <section>
+        <h2>Search Sections</h2>
+        <input id="search" placeholder="Search section title, story text, art, or choice text">
+        <p class="muted" id="summary"></p>
+      </section>
+
+      <section>
+        <h2>Heroes</h2>
+        <div class="grid" id="heroes"></div>
+      </section>
+
+      <section>
+        <h2>Items, Weapons, Mounts, And Gear Bonuses</h2>
+        <div class="grid" id="gear"></div>
+      </section>
+
+      <section>
+        <h2>Codewords</h2>
+        <div class="grid" id="codewords"></div>
+      </section>
+
+      <section>
+        <h2>World Maps</h2>
+        <div class="grid" id="maps"></div>
+      </section>
+
+      <section>
+        <h2>Books And Sections</h2>
+        <div id="books"></div>
+      </section>
+    </main>
+
+    <script src="data.js"></script>
+    <script>
+      const data = window.GameData;
+      const searchInput = document.querySelector("#search");
+      const summary = document.querySelector("#summary");
+      const booksNode = document.querySelector("#books");
+
+      renderBasics();
+      renderBooks("");
+      searchInput.addEventListener("input", () => renderBooks(searchInput.value.trim().toLowerCase()));
+      booksNode.addEventListener("toggle", (event) => {
+        const details = event.target.closest && event.target.closest("details[data-book-id]");
+        if (!details || !booksNode.contains(details)) return;
+        if (!details.open || details.dataset.rendered === "true" || searchInput.value.trim()) return;
+        const book = data.books.find((entry) => entry.id === Number(details.dataset.bookId));
+        const list = details.querySelector(".section-list");
+        if (!book || !list) return;
+        const sections = Object.values(book.sections).sort((a, b) => sectionNumber(a) - sectionNumber(b));
+        list.innerHTML = sections.map(sectionHtml).join("");
+        details.dataset.rendered = "true";
+      }, true);
+
+      function renderBasics() {
+        document.querySelector("#heroes").innerHTML = data.heroes.map((hero) => `
+          <article class="card">
+            ${pictureHtml("hero", hero.name)}
+            <h3>${escapeHtml(hero.name)}</h3>
+            <p class="muted">${escapeHtml(hero.role)}</p>
+            <p>${escapeHtml(hero.description)}</p>
+            <p><strong>Stat modifiers:</strong> ${formatObject(hero.statModifiers)}</p>
+            <p><strong>Starting items:</strong> ${escapeHtml(hero.startingItems.join(", "))}</p>
+          </article>
+        `).join("");
+
+        const allGear = unique([
+          ...(data.weapons || []),
+          ...(data.mounts || []),
+          ...(data.legendaryItems || []),
+          ...Object.keys(data.itemStatModifiers || {})
+        ]);
+        document.querySelector("#gear").innerHTML = allGear.map((item) => `
+          <article class="card">
+            ${pictureHtml("gear", item)}
+            <h3>${escapeHtml(item)}</h3>
+            <p class="muted">${gearType(item)}</p>
+            <p><strong>Bonus:</strong> ${formatObject((data.itemStatModifiers || {})[item] || {}) || "None"}</p>
+          </article>
+        `).join("");
+
+        document.querySelector("#codewords").innerHTML = Object.entries(data.codewords).map(([code, entry]) => `
+          <article class="card">
+            <h3>${escapeHtml(code.toLowerCase())}</h3>
+            <p>${escapeHtml(entry.description)}</p>
+            <p><strong>Effects:</strong> ${formatObject(entry.effects)}</p>
+          </article>
+        `).join("");
+
+        document.querySelector("#maps").innerHTML = data.books.map((book) => {
+          const map = data.worldMaps && data.worldMaps[book.id];
+          return `
+            <article class="card">
+              ${pictureHtml("map", map ? map.name : book.title)}
+              <h3>${escapeHtml(book.title)}</h3>
+              <p class="muted">${escapeHtml(map ? map.name : "No map")}</p>
+              ${map ? `<p><strong>Regions:</strong> ${escapeHtml(map.regions.join(", "))}</p>` : ""}
+              ${map ? `<p><strong>Landmarks:</strong> ${escapeHtml(map.landmarks.map((landmark) => `${landmark.label} (${landmark.section})`).join(", "))}</p>` : ""}
+            </article>
+          `;
+        }).join("");
+      }
+
+      function renderBooks(query) {
+        let shown = 0;
+        let total = 0;
+        booksNode.innerHTML = data.books.map((book) => {
+          const sections = Object.values(book.sections).sort((a, b) => sectionNumber(a) - sectionNumber(b));
+          total += sections.length;
+          const visible = query ? sections.filter((section) => sectionMatches(section, query)) : [];
+          shown += visible.length;
+          return `
+            <details data-book-id="${book.id}" data-rendered="${query ? "true" : "false"}">
+              <summary>${escapeHtml(book.title)} - ${query ? `${visible.length} matching` : book.sectionCount} sections</summary>
+              <p class="muted">${escapeHtml(book.unlockText || "Unlocked by story progress.")}</p>
+              <div class="section-list">
+                ${query ? (visible.map(sectionHtml).join("") || '<p class="muted">No matching sections.</p>') : '<p class="muted">Open this book to render all sections.</p>'}
+              </div>
+            </details>
+          `;
+        }).join("");
+        summary.textContent = query
+          ? `${shown} matching sections shown out of ${total}.`
+          : `${total} total sections are available. Open a book to view every numbered section.`;
+      }
+
+      function sectionHtml(section) {
+        const choices = (section.choices || []).map((choice) => `
+          <li>
+            ${escapeHtml(choice.label)}
+            <span class="muted"> -> ${escapeHtml(targetText(choice.target))}${choice.requirements ? ` / requires ${escapeHtml(formatObject(choice.requirements))}` : ""}</span>
+          </li>
+        `).join("");
+        return `
+          <article class="card section-entry">
+            ${pictureHtml("story", section.art || section.title)}
+            <h3>${escapeHtml(section.title)}</h3>
+            <p class="muted">Art: ${escapeHtml(section.art || "None")}</p>
+            <p>${escapeHtml(section.text || "")}</p>
+            <p><strong>Effects:</strong> ${formatObject(section.effects || {}) || "None"}</p>
+            <ol class="choice">${choices}</ol>
+          </article>
+        `;
+      }
+
+      function sectionMatches(section, query) {
+        const text = [
+          section.title,
+          section.art,
+          section.text,
+          JSON.stringify(section.effects || {}),
+          ...(section.choices || []).map((choice) => `${choice.label} ${JSON.stringify(choice.requirements || {})}`)
+        ].join(" ").toLowerCase();
+        return text.includes(query);
+      }
+
+      function sectionNumber(section) {
+        const match = String(section.title || "").match(/section\s+(\d+)/i);
+        return match ? Number(match[1]) : 0;
+      }
+
+      function targetText(target) {
+        if (!target) return "?";
+        return `Book ${target.book || "current"}, Section ${target.section}`;
+      }
+
+      function gearType(item) {
+        if ((data.weapons || []).includes(item)) return "Weapon";
+        if ((data.mounts || []).includes(item)) return "Mount";
+        if ((data.legendaryItems || []).includes(item)) return "Legendary item";
+        return "Item";
+      }
+
+      function pictureHtml(type, label) {
+        return `<div class="picture ${escapeHtml(type)}" data-label="${escapeHtml(label)}" aria-label="${escapeHtml(label)} picture"></div>`;
+      }
+
+      function formatObject(value) {
+        if (!value || !Object.keys(value).length) return "";
+        return Object.entries(value).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(", ") : typeof val === "object" ? formatObject(val) : val}`).join("; ");
+      }
+
+      function unique(values) {
+        return [...new Set(values)];
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+    </script>
+  </body>
+</html>

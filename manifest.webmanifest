@@ -1,12 +1,12 @@
 {
-  "name": "Journey to the West",
-  "short_name": "West Journey",
-  "description": "An offline choose-your-own-adventure game inspired by mythic road stories.",
+  "name": "Journey to the West: Frontier Trails",
+  "short_name": "Frontier Trails",
+  "description": "An offline Wild West choose-your-own-adventure game with heroes, maps, codewords, saves, and numbered paper sections.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
-  "background_color": "#f6ecd8",
-  "theme_color": "#243832",
+  "background_color": "#ead5aa",
+  "theme_color": "#a33b22",
   "orientation": "any",
   "icons": [
     {
