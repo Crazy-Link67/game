@@ -21,8 +21,10 @@
     toast: "",
     installMessage: "",
     rollBoost: null,
-    onlineData: null
+    onlineData: null,
+    isSpeaking: false
   };
+  let speechUtterance = null;
 
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
@@ -539,11 +541,18 @@
   function screenToolbar() {
     return `
       <nav class="screen-toolbar" aria-label="Game actions">
+        ${speechButtonHtml()}
         ${undoButtonHtml()}
         <button data-action="title">Title</button>
         ${loadSettings().onlineMode ? '<button data-action="online">Online</button>' : ""}
       </nav>
     `;
+  }
+
+  function speechButtonHtml() {
+    const supported = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+    const label = state.isSpeaking ? "Stop Reading" : "Read Aloud";
+    return `<button class="tts-button${state.isSpeaking ? " speaking" : ""}" data-action="toggle-speech"${supported ? "" : " disabled"}>${label}</button>`;
   }
 
   function undoButtonHtml() {
@@ -574,6 +583,7 @@
     if (action === "upgrade-stat") return upgradeStat(button.dataset.stat);
     if (action === "roll-stat") return rollForChoice(Number(button.dataset.choiceIndex));
     if (action === "undo") return undoLastAction();
+    if (action === "toggle-speech") return toggleTextToSpeech();
     if (action === "jump-section") return jumpSection(Number(button.dataset.bookId), Number(button.dataset.sectionNumber));
     if (action === "submit-score") return submitScore();
     if (action === "refresh-online") return refreshOnline();
@@ -612,6 +622,7 @@
   }
 
   function setView(view, toast = "") {
+    if (view !== state.view) stopTextToSpeech(false);
     state.view = view;
     state.toast = toast;
     render();
@@ -690,6 +701,7 @@
     const boost = getChoiceBoost(save, choiceIndex);
     const check = checkRequirements(save, choice.requirements, boost);
     if (!check.ok) return setView("game", check.reason);
+    stopTextToSpeech(false);
     pushUndo(save);
     applyEffects(save, choice.effects);
     clearRollBoost();
@@ -729,6 +741,7 @@
     if (!save.unlockedBooks.includes(bookId) || !save.visitedSections.includes(key)) {
       return setView("maps", "You can only jump to visited sections in unlocked books.");
     }
+    stopTextToSpeech(false);
     pushUndo(save);
     enterSection(save, bookId, sectionNumber);
     upsertSave(save);
@@ -920,6 +933,7 @@
   }
 
   function undoLastAction() {
+    stopTextToSpeech(false);
     if (state.rollBoost) {
       clearRollBoost();
       return setView("game", "Dice roll undone.");
@@ -1380,6 +1394,63 @@
 
   function choiceTargetBook(save, choice) {
     return Number(choice && choice.target && choice.target.book) || save.currentBookId;
+  }
+
+  function toggleTextToSpeech() {
+    if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+      return setView(state.view, "Text to speech is not available in this browser.");
+    }
+    if (state.isSpeaking) {
+      stopTextToSpeech();
+      return;
+    }
+    const text = currentSectionSpeechText();
+    if (!text) return setView(state.view, "There is no story text to read yet.");
+    speechUtterance = new SpeechSynthesisUtterance(text);
+    speechUtterance.rate = 0.92;
+    speechUtterance.pitch = 0.95;
+    speechUtterance.onend = () => {
+      state.isSpeaking = false;
+      speechUtterance = null;
+      if (state.view === "game") render();
+    };
+    speechUtterance.onerror = () => {
+      state.isSpeaking = false;
+      speechUtterance = null;
+      if (state.view === "game") setView("game", "Text to speech stopped.");
+    };
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(speechUtterance);
+    state.isSpeaking = true;
+    render();
+  }
+
+  function stopTextToSpeech(shouldRender = true) {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    speechUtterance = null;
+    const wasSpeaking = state.isSpeaking;
+    state.isSpeaking = false;
+    if (shouldRender && wasSpeaking) render();
+  }
+
+  function currentSectionSpeechText() {
+    const save = getActiveSave();
+    const section = save && getSection(save.currentBookId, save.currentSectionNumber);
+    if (!save || !section) return "";
+    const book = getBook(save.currentBookId);
+    const choices = visibleChoices(save, section)
+      .map(({ choice, index }) => {
+        const check = checkRequirements(save, choice.requirements, getChoiceBoost(save, index));
+        const target = choiceTargetLabel(choice);
+        const result = check.ok ? (choice.hint || choice.result || "Travel this route.") : check.reason;
+        return `Section ${target}. ${choice.label}. ${result}`;
+      })
+      .join(" ");
+    return [
+      `${book.title}. Section ${save.currentSectionNumber}. ${section.title}.`,
+      section.text,
+      choices ? `Choices. ${choices}` : "There are no forward choices from this section."
+    ].join(" ");
   }
 
   function escapeHtml(value) {

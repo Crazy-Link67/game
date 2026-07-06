@@ -16,7 +16,9 @@
   --font-size: 16px;
   --paper-fleck: rgba(94, 68, 35, 0.08);
   --paper-fiber: rgba(255, 255, 255, 0.32);
+  --paper-stain: rgba(94, 54, 20, 0.11);
   --surface-sheen: rgba(255, 255, 255, 0.38);
+  --photo-wash: rgba(255, 235, 180, 0.22);
 }
 
 body.dark {
@@ -35,7 +37,9 @@ body.dark {
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
   --paper-fleck: rgba(255, 230, 184, 0.055);
   --paper-fiber: rgba(255, 255, 255, 0.08);
+  --paper-stain: rgba(255, 199, 113, 0.08);
   --surface-sheen: rgba(255, 255, 255, 0.06);
+  --photo-wash: rgba(255, 209, 132, 0.08);
 }
 
 * {
@@ -53,8 +57,10 @@ body {
   color: var(--ink);
   font: var(--font-size)/1.55 Georgia, "Times New Roman", serif;
   background:
+    radial-gradient(ellipse at 52% 118%, rgba(42, 26, 16, 0.18), transparent 35rem),
     radial-gradient(circle at 18% 16%, rgba(214, 132, 45, 0.26), transparent 30rem),
     radial-gradient(circle at 82% 8%, rgba(83, 55, 30, 0.16), transparent 24rem),
+    radial-gradient(circle at 42% 46%, var(--paper-stain), transparent 18rem),
     repeating-linear-gradient(87deg, transparent 0 19px, var(--paper-fleck) 19px 20px, transparent 20px 42px),
     repeating-linear-gradient(177deg, transparent 0 23px, var(--paper-fiber) 23px 24px, transparent 24px 58px),
     linear-gradient(135deg, var(--bg), var(--bg-strong));
@@ -128,12 +134,18 @@ button:disabled {
   position: relative;
   overflow: hidden;
   background:
+    linear-gradient(180deg, rgba(42, 26, 16, 0.02), rgba(42, 26, 16, 0.12)),
+    url("assets/frontier-picture-atlas.png") left top / 214% 214% no-repeat,
     radial-gradient(circle at 50% 18%, rgba(255, 238, 171, 0.86) 0 5.2rem, transparent 5.4rem),
     radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.32), transparent 14rem),
     url("assets/compass.svg") center 16% / 190px 190px no-repeat,
     repeating-linear-gradient(98deg, transparent 0 14px, rgba(255, 255, 255, 0.12) 14px 16px, transparent 16px 48px),
     linear-gradient(180deg, #f2cf77 0%, #d4873e 32%, #9b6841 62%, #3b2418 100%);
-  box-shadow: var(--shadow);
+  background-blend-mode: soft-light, multiply, normal, normal, normal, normal, normal;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 247, 223, 0.2),
+    inset 0 -92px 130px rgba(42, 26, 16, 0.28),
+    var(--shadow);
 }
 
 .hero-art::before,
@@ -164,9 +176,13 @@ button:disabled {
   background:
     linear-gradient(180deg, var(--surface-sheen), transparent 42%),
     radial-gradient(circle at 12% 8%, rgba(214, 154, 45, 0.1), transparent 16rem),
+    radial-gradient(circle at 82% 76%, var(--paper-stain), transparent 18rem),
     repeating-linear-gradient(92deg, transparent 0 18px, var(--paper-fleck) 18px 19px),
+    repeating-linear-gradient(1deg, transparent 0 27px, var(--paper-fiber) 27px 28px),
     var(--panel);
-  box-shadow: var(--shadow);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 247, 223, 0.18),
+    var(--shadow);
 }
 
 .title-copy {
@@ -237,6 +253,25 @@ h3 {
   color: #fffdf6;
   border-color: transparent;
   background: var(--accent-2);
+}
+
+.tts-button {
+  color: #fffdf6;
+  border-color: transparent;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.22), transparent 34%),
+    repeating-linear-gradient(135deg, transparent 0 8px, rgba(255, 247, 223, 0.08) 8px 9px),
+    linear-gradient(180deg, #7f4b24, #4b2a18);
+}
+
+.tts-button.speaking {
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.28), transparent 34%),
+    repeating-linear-gradient(135deg, transparent 0 8px, rgba(255, 247, 223, 0.1) 8px 9px),
+    linear-gradient(180deg, var(--accent), #652214);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 247, 223, 0.18),
+    0 0 0 3px color-mix(in srgb, var(--accent), transparent 72%);
 }
 
 .quiet {
@@ -353,16 +388,24 @@ h3 {
 }
 
 .story-scene {
-  min-height: 180px;
+  min-height: 218px;
   margin: 20px 0;
   border-radius: 8px;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--line), #2a1a10 16%);
   background:
+    linear-gradient(180deg, var(--photo-wash), rgba(42, 26, 16, 0.24)),
+    url("assets/frontier-picture-atlas.png") var(--scene-photo-position, right bottom) / 210% 210% no-repeat,
     var(--scene-texture),
     repeating-linear-gradient(135deg, transparent 0 18px, rgba(255, 255, 255, 0.12) 18px 20px),
     linear-gradient(120deg, rgba(185, 67, 47, 0.15), rgba(47, 117, 105, 0.2));
+  background-blend-mode: soft-light, multiply, normal, normal, normal;
   position: relative;
+  isolation: isolate;
   overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 247, 223, 0.2),
+    inset 0 -82px 90px rgba(42, 26, 16, 0.26),
+    0 14px 30px rgba(42, 26, 16, 0.13);
 }
 
 .story-scene::after {
@@ -370,8 +413,11 @@ h3 {
   position: absolute;
   inset: 0;
   background:
+    linear-gradient(90deg, rgba(255, 247, 223, 0.16), transparent 19%, transparent 80%, rgba(42, 26, 16, 0.24)),
     radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.16), transparent 10rem),
-    repeating-linear-gradient(90deg, transparent 0 34px, rgba(23, 34, 31, 0.05) 34px 35px);
+    repeating-linear-gradient(90deg, transparent 0 34px, rgba(23, 34, 31, 0.05) 34px 35px),
+    repeating-linear-gradient(0deg, transparent 0 13px, rgba(255, 248, 232, 0.04) 13px 14px);
+  box-shadow: inset 0 0 0 10px rgba(255, 248, 232, 0.09), inset 0 0 42px rgba(23, 34, 31, 0.24);
   mix-blend-mode: soft-light;
   pointer-events: none;
 }
@@ -381,14 +427,21 @@ h3 {
   position: absolute;
   left: 20px;
   bottom: 16px;
-  color: rgba(23, 34, 31, 0.72);
+  max-width: calc(100% - 40px);
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 248, 232, 0.18);
+  border-radius: 6px;
+  color: rgba(255, 248, 232, 0.94);
+  background: rgba(42, 26, 16, 0.42);
   font: 700 0.78rem/1.2 Arial, sans-serif;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(23, 34, 31, 0.65);
   z-index: 1;
 }
 
 .story-scene[data-book="1"] {
+  --scene-photo-position: right bottom;
   --scene-texture:
     radial-gradient(circle at 78% 20%, rgba(255, 225, 131, 0.76) 0 3.8rem, transparent 4rem),
     linear-gradient(150deg, transparent 0 48%, rgba(66, 87, 64, 0.42) 48% 55%, transparent 55%),
@@ -397,6 +450,7 @@ h3 {
 }
 
 .story-scene[data-book="2"] {
+  --scene-photo-position: left bottom;
   --scene-texture:
     radial-gradient(circle at 76% 18%, rgba(238, 241, 206, 0.72) 0 2.8rem, transparent 3rem),
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.15) 0 2px, transparent 2px 16px),
@@ -405,6 +459,7 @@ h3 {
 }
 
 .story-scene[data-book="3"] {
+  --scene-photo-position: right bottom;
   --scene-texture:
     radial-gradient(ellipse at 38% 28%, rgba(255, 255, 255, 0.8), transparent 11rem),
     radial-gradient(ellipse at 72% 42%, rgba(255, 255, 255, 0.55), transparent 9rem),
@@ -413,6 +468,7 @@ h3 {
 }
 
 .story-scene[data-book="4"] {
+  --scene-photo-position: left bottom;
   --scene-texture:
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0 2px, transparent 2px 28px),
     linear-gradient(135deg, transparent 0 44%, rgba(210, 169, 74, 0.42) 44% 49%, transparent 49%),
@@ -420,6 +476,7 @@ h3 {
 }
 
 .story-scene[data-book="5"] {
+  --scene-photo-position: right bottom;
   --scene-texture:
     radial-gradient(circle at 26% 72%, rgba(227, 109, 78, 0.45), transparent 8rem),
     repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.08) 0 3px, transparent 3px 24px),
@@ -428,6 +485,7 @@ h3 {
 }
 
 .story-scene[data-book="6"] {
+  --scene-photo-position: left bottom;
   --scene-texture:
     radial-gradient(circle at 50% 24%, rgba(255, 232, 156, 0.76) 0 4.4rem, transparent 4.7rem),
     radial-gradient(ellipse at 50% 78%, rgba(236, 168, 178, 0.34), transparent 12rem),
@@ -436,6 +494,7 @@ h3 {
 }
 
 .story-scene[data-book="7"] {
+  --scene-photo-position: right bottom;
   --scene-texture:
     radial-gradient(circle at 24% 24%, rgba(220, 220, 210, 0.34), transparent 8rem),
     repeating-linear-gradient(110deg, rgba(255, 255, 255, 0.08) 0 3px, transparent 3px 22px),
@@ -444,6 +503,7 @@ h3 {
 }
 
 .story-scene[data-book="8"] {
+  --scene-photo-position: right bottom;
   --scene-texture:
     radial-gradient(circle at 78% 22%, rgba(227, 109, 78, 0.38), transparent 7rem),
     repeating-linear-gradient(20deg, rgba(255, 255, 255, 0.07) 0 2px, transparent 2px 18px),
@@ -451,6 +511,7 @@ h3 {
 }
 
 .story-scene[data-book="9"] {
+  --scene-photo-position: left bottom;
   --scene-texture:
     radial-gradient(circle at 58% 28%, rgba(245, 236, 191, 0.65), transparent 7rem),
     radial-gradient(ellipse at 48% 78%, rgba(210, 210, 194, 0.25), transparent 11rem),
@@ -459,6 +520,7 @@ h3 {
 }
 
 .story-scene[data-book="10"] {
+  --scene-photo-position: right bottom;
   --scene-texture:
     radial-gradient(circle at 76% 18%, rgba(255, 238, 171, 0.58), transparent 6rem),
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.1) 0 3px, transparent 3px 28px),
@@ -467,6 +529,7 @@ h3 {
 }
 
 .story-scene[data-book="11"] {
+  --scene-photo-position: left bottom;
   --scene-texture:
     radial-gradient(circle at 50% 18%, rgba(255, 223, 127, 0.84), transparent 8rem),
     linear-gradient(30deg, transparent 0 42%, rgba(126, 33, 26, 0.46) 42% 49%, transparent 49%),
@@ -475,7 +538,8 @@ h3 {
 }
 
 body.dark .story-scene::before {
-  color: rgba(245, 234, 216, 0.78);
+  color: rgba(245, 234, 216, 0.92);
+  background: rgba(18, 12, 9, 0.52);
 }
 
 .choices {
@@ -493,8 +557,12 @@ body.dark .story-scene::before {
   padding: 12px;
   background:
     linear-gradient(180deg, var(--surface-sheen), transparent 52%),
+    radial-gradient(circle at 92% 12%, var(--paper-stain), transparent 9rem),
     repeating-linear-gradient(0deg, transparent 0 15px, var(--paper-fleck) 15px 16px),
     var(--panel-solid);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 247, 223, 0.18),
+    0 7px 18px rgba(42, 26, 16, 0.08);
 }
 
 .choice-row p {
@@ -522,7 +590,11 @@ body.dark .story-scene::before {
   border: 2px solid color-mix(in srgb, var(--accent-3), #fff 18%);
   background:
     radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.26), transparent 32%),
+    repeating-linear-gradient(135deg, transparent 0 7px, rgba(255, 247, 223, 0.08) 7px 8px),
     linear-gradient(180deg, var(--accent), #652214);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 247, 223, 0.18),
+    inset 0 -10px 16px rgba(42, 26, 16, 0.24);
   font: 800 0.86rem/1 Arial, sans-serif;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -622,16 +694,23 @@ select {
 }
 
 .world-map {
-  min-height: 230px;
+  min-height: 260px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   background:
+    linear-gradient(180deg, rgba(255, 235, 183, 0.18), rgba(42, 26, 16, 0.26)),
+    url("assets/frontier-picture-atlas.png") left bottom / 212% 212% no-repeat,
     var(--map-texture),
     repeating-linear-gradient(90deg, transparent 0 24px, rgba(255, 255, 255, 0.1) 24px 25px),
     linear-gradient(135deg, color-mix(in srgb, var(--accent-2), transparent 20%), color-mix(in srgb, var(--accent-3), transparent 18%));
-  box-shadow: inset 0 0 40px rgba(23, 34, 31, 0.18);
+  background-blend-mode: soft-light, multiply, normal, normal, normal;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 248, 232, 0.18),
+    inset 0 0 56px rgba(23, 34, 31, 0.26),
+    0 12px 26px rgba(42, 26, 16, 0.12);
 }
 
 .world-map::before,
@@ -644,8 +723,10 @@ select {
 
 .world-map::before {
   background:
+    radial-gradient(circle at 76% 68%, rgba(42, 26, 16, 0.22), transparent 10rem),
     radial-gradient(circle at 22% 22%, rgba(255, 255, 255, 0.18), transparent 9rem),
-    repeating-linear-gradient(32deg, transparent 0 20px, rgba(23, 34, 31, 0.07) 20px 21px);
+    repeating-linear-gradient(32deg, transparent 0 20px, rgba(23, 34, 31, 0.07) 20px 21px),
+    repeating-linear-gradient(0deg, transparent 0 14px, rgba(255, 248, 232, 0.04) 14px 15px);
   mix-blend-mode: soft-light;
 }
 
@@ -748,8 +829,13 @@ select {
   top: 52%;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 248, 232, 0.64);
-  box-shadow: 0 0 0 1px rgba(23, 34, 31, 0.18), 0 8px 18px rgba(23, 34, 31, 0.16);
+  background:
+    repeating-linear-gradient(90deg, rgba(65, 37, 20, 0.76) 0 16px, transparent 16px 24px),
+    linear-gradient(90deg, rgba(255, 248, 232, 0.74), rgba(255, 248, 232, 0.38));
+  box-shadow:
+    0 0 0 1px rgba(255, 248, 232, 0.24),
+    0 0 0 2px rgba(23, 34, 31, 0.16),
+    0 8px 18px rgba(23, 34, 31, 0.16);
   transform: rotate(-8deg);
 }
 
@@ -768,8 +854,12 @@ select {
   color: #fffdf6;
   background:
     radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.45), transparent 35%),
+    repeating-linear-gradient(135deg, transparent 0 7px, rgba(255, 248, 232, 0.08) 7px 8px),
     var(--accent);
-  box-shadow: 0 8px 16px rgba(23, 34, 31, 0.24);
+  box-shadow:
+    inset 0 0 0 1px rgba(42, 26, 16, 0.18),
+    0 8px 16px rgba(23, 34, 31, 0.24),
+    0 0 0 4px rgba(42, 26, 16, 0.12);
   transform: translate(-50%, -50%);
   z-index: 2;
 }
