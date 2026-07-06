@@ -205,7 +205,7 @@
     const check = checkRequirements(save, choice.requirements, boost);
     const lockedClass = check.ok ? "" : " locked";
     const disabled = check.ok ? "" : " disabled";
-    const reason = check.ok && boost ? `Rolled +${boost.amount} ${boost.stat}. Use this action now.` : (check.ok ? (choice.hint || "Travel this route.") : check.reason);
+    const reason = check.ok && boost ? `Rolled +${boost.amount} ${boost.stat}. Use this action now.` : (check.ok ? (choice.hint || choice.result || "Travel this route.") : check.reason);
     const rollButton = !check.ok && check.canRoll
       ? `<button class="secondary" data-action="roll-stat" data-choice-index="${index}">Roll d6 for ${escapeHtml(check.stat)}</button>`
       : "";
@@ -694,7 +694,7 @@
     clearRollBoost();
     enterSection(save, choiceTargetBook(save, choice), choice.target.section);
     upsertSave(save);
-    setView("game");
+    setView("game", choice.result || "The trail changes under your boots.");
   }
 
   function rollForChoice(choiceIndex) {
@@ -905,6 +905,7 @@
     addUnique(save.codewords, effects.addCodewords);
     addUnique(save.unlockedBooks, effects.unlockBooks);
     if (effects.maxEverything) maxOutSave(save);
+    if (effects.spendMoney) spendMoney(save, effects.spendMoney);
     if (effects.money) addMoney(save, effects.money);
     if (effects.statChanges) {
       Object.entries(effects.statChanges).forEach(([stat, amount]) => {
@@ -972,6 +973,13 @@
     }
     if (requirements.mount && !hasMount(save)) {
       return { ok: false, reason: "Requires a mount to run from this battle." };
+    }
+    if (requirements.money && (save.money || 0) < requirements.money) {
+      return { ok: false, reason: `Requires ${requirements.money} coins.` };
+    }
+    if (requirements.notItems) {
+      const owned = requirements.notItems.find((entry) => save.inventory.includes(entry));
+      if (owned) return { ok: false, reason: `Already owns ${owned}.` };
     }
     for (const [key, label, source] of [
       ["items", "item", save.inventory],
@@ -1150,6 +1158,10 @@
   function addMoney(save, amount) {
     save.money = (save.money || 0) + amount;
     if (amount > 0) save.totalMoneyCollected = (save.totalMoneyCollected || 0) + amount;
+  }
+
+  function spendMoney(save, amount) {
+    save.money = Math.max(0, (save.money || 0) - amount);
   }
 
   async function fetchOnlineData(settings) {

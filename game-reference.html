@@ -204,6 +204,12 @@
       </section>
 
       <section>
+        <h2>Markets</h2>
+        <p class="muted">Market choices appear throughout the books and let you spend coins on useful gear.</p>
+        <div class="grid" id="markets"></div>
+      </section>
+
+      <section>
         <h2>Codewords</h2>
         <div class="grid" id="codewords"></div>
       </section>
@@ -268,6 +274,15 @@
           </article>
         `).join("");
 
+        document.querySelector("#markets").innerHTML = (data.marketGoods || []).map((good) => `
+          <article class="card">
+            ${pictureHtml("gear", good.item)}
+            <h3>${escapeHtml(good.item)}</h3>
+            <p><strong>Price:</strong> ${good.price} coins</p>
+            <p><strong>Bonus:</strong> ${formatObject((data.itemStatModifiers || {})[good.item] || {}) || "None"}</p>
+          </article>
+        `).join("");
+
         document.querySelector("#codewords").innerHTML = Object.entries(data.codewords).map(([code, entry]) => `
           <article class="card">
             <h3>${escapeHtml(code.toLowerCase())}</h3>
@@ -317,7 +332,7 @@
         const choices = (section.choices || []).map((choice) => `
           <li>
             ${escapeHtml(choice.label)}
-            <span class="muted"> -> ${escapeHtml(targetText(choice.target))}${choice.requirements ? ` / requires ${escapeHtml(formatObject(choice.requirements))}` : ""}</span>
+            <span class="muted"> -> ${escapeHtml(targetText(choice.target))}${choice.requirements ? ` / requires ${escapeHtml(formatObject(choice.requirements))}` : ""}${choice.result ? ` / result ${escapeHtml(choice.result)}` : ""}</span>
           </li>
         `).join("");
         return `

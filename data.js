@@ -27,6 +27,16 @@ window.GameData = {
     "ghost town map",
     "lucky silver saddle"
   ],
+  marketGoods: [
+    { item: "trail provisions", price: 25 },
+    { item: "six-shooter revolver", price: 45 },
+    { item: "long-barrel rifle", price: 70 },
+    { item: "coach shotgun", price: 85 },
+    { item: "silver Bowie knife", price: 40 },
+    { item: "lasso", price: 30 },
+    { item: "mustang", price: 120 },
+    { item: "black stallion", price: 180 }
+  ],
   randomHeroNames: [
     "Annie Dust",
     "Buck Hollow",
@@ -55,6 +65,7 @@ window.GameData = {
     "rail hammer": { Strength: 1 },
     "sage tonic": { Health: 2 },
     "weathered hymnal": { Spirit: 1 },
+    "trail provisions": { Health: 3 },
     "sundown marshal badge": { Strength: 4, Spirit: 4 },
     "gold compass": { Wisdom: 5 },
     "diamond canteen": { Health: 8 },
@@ -544,13 +555,13 @@ window.GameData = {
   function makeGeneratedSection(book, sectionNumber) {
     const unlock = nextBookUnlocks[book.id];
     const effects = {
-      addFlags: [`book_${book.id}_section_${sectionNumber}_visited`],
-      money: sectionNumber % 10 === 0 ? book.id * 5 + Math.floor(sectionNumber / 10) : 1
+      addFlags: [`book_${book.id}_section_${sectionNumber}_visited`]
     };
+    if (sectionNumber % 10 === 0) effects.money = book.id * 5 + Math.floor(sectionNumber / 10);
     if (unlock && sectionNumber === unlock.at) {
       effects.unlockBooks = [unlock.book];
       effects.addFlags.push(unlock.flag);
-      effects.money += 50;
+      effects.money = (effects.money || 0) + 50;
     }
 
     return {
@@ -642,6 +653,21 @@ window.GameData = {
     "ghost town map",
     "lucky silver saddle"
   ];
+  const marketGoods = [
+    { item: "trail provisions", price: 25 },
+    { item: "six-shooter revolver", price: 45 },
+    { item: "long-barrel rifle", price: 70 },
+    { item: "coach shotgun", price: 85 },
+    { item: "silver Bowie knife", price: 40 },
+    { item: "lasso", price: 30 },
+    { item: "buffalo rifle", price: 120 },
+    { item: "pepperbox pistol", price: 95 },
+    { item: "cattleman's saber", price: 110 },
+    { item: "mustang", price: 120 },
+    { item: "black stallion", price: 180 },
+    { item: "palomino", price: 140 },
+    { item: "stagecoach team", price: 220 }
+  ];
   const itemStatModifiers = {
     "six-shooter revolver": { Strength: 1, Agility: 1 },
     "long-barrel rifle": { Strength: 2, Wisdom: 1 },
@@ -664,6 +690,7 @@ window.GameData = {
     "rail hammer": { Strength: 1 },
     "sage tonic": { Health: 2 },
     "weathered hymnal": { Spirit: 1 },
+    "trail provisions": { Health: 3 },
     "brass rail token": { Wisdom: 1 },
     "marshal's spare revolver": { Strength: 1, Agility: 1 },
     "green river token": { Spirit: 1 },
@@ -679,6 +706,7 @@ window.GameData = {
   window.GameData.weapons = frontierWeapons;
   window.GameData.mounts = frontierMounts;
   window.GameData.legendaryItems = legendaryItems;
+  window.GameData.marketGoods = marketGoods;
   window.GameData.itemStatModifiers = itemStatModifiers;
   window.GameData.randomHeroNames = [
     "Annie Dust",
@@ -859,14 +887,15 @@ window.GameData = {
 
   function generatedFrontierSection(meta, sectionNumber) {
     const nextUnlock = meta.id < 11 ? { at: Math.min(880, 80 + meta.id * 70), book: meta.id + 1 } : null;
+    const scene = frontierScene(meta, sectionNumber);
     const effects = {
-      addFlags: [`book_${meta.id}_section_${sectionNumber}_visited`],
-      money: sectionNumber % 10 === 0 ? meta.id * 7 + Math.floor(sectionNumber / 10) : 1
+      addFlags: [`book_${meta.id}_section_${sectionNumber}_visited`, scene.flag]
     };
+    if (scene.money) effects.money = scene.money;
     if (nextUnlock && sectionNumber === nextUnlock.at) {
       effects.unlockBooks = [nextUnlock.book];
       effects.addFlags.push(`book_${nextUnlock.book}_trail_opened`);
-      effects.money += 75;
+      effects.money = (effects.money || 0) + 75;
     }
     if (sectionNumber % 30 === 0) {
       effects.addItems = effects.addItems || [];
@@ -876,25 +905,64 @@ window.GameData = {
       effects.addItems = effects.addItems || [];
       effects.addItems.push(frontierMounts[(meta.id + sectionNumber / 45) % frontierMounts.length]);
     }
+    const isMarket = sectionNumber % 10 === 0;
     return {
       title: `Section ${sectionNumber}: ${meta.name}`,
-      art: `${meta.art} Picture`,
-      text: `The page shows ${meta.name} in sepia ink: hoofprints, dust, and a far-off landmark under a hard western sky. Your choices are written like trail notes at the bottom of the paper.`,
+      art: scene.art,
+      text: isMarket
+        ? `The page shows ${meta.name} in sepia ink: hoofprints, dust, and a market wagon under a hard western sky. Traders lift canvas flaps over weapons, mounts, and useful trail goods.`
+        : scene.text,
       effects,
-      choices: generatedFrontierChoices(meta, sectionNumber, nextUnlock)
+      choices: generatedFrontierChoices(meta, sectionNumber, nextUnlock, scene)
     };
   }
 
-  function generatedFrontierChoices(meta, sectionNumber, nextUnlock) {
+  function generatedFrontierChoices(meta, sectionNumber, nextUnlock, scene) {
     const choices = [];
     if (sectionNumber < 1000) {
-      choices.push({ label: `Ride on to the next marked stretch of ${meta.name}.`, target: { book: meta.id, section: sectionNumber + 1 } });
+      choices.push({
+        label: scene.action,
+        target: { book: meta.id, section: sectionNumber + 1 },
+        result: scene.result
+      });
+    }
+    if (sectionNumber % 10 === 0 && sectionNumber < 1000) {
+      const good = marketGoods[(meta.id + sectionNumber / 10) % marketGoods.length];
+      choices.push({
+        label: `Buy ${good.item} from the trail market for ${good.price} coins, then ride on.`,
+        hint: `Market purchase: costs ${good.price} coins.`,
+        target: { book: meta.id, section: sectionNumber + 1 },
+        requirements: { money: good.price, notItems: [good.item] },
+        effects: { spendMoney: good.price, addItems: [good.item], addFlags: [`bought_${good.item.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}`] },
+        result: `You buy ${good.item}, spend ${good.price} coins, and pack it for the trail.`
+      });
+    }
+    if (sectionNumber % 12 === 0 && sectionNumber + 2 <= 1000) {
+      choices.push({
+        label: "Search the side trail before moving on.",
+        hint: "A Wisdom path with a coin reward.",
+        target: { book: meta.id, section: sectionNumber + 2 },
+        requirements: { stats: { Wisdom: 10 + Math.min(meta.id, 6) } },
+        effects: { money: 18 + meta.id * 4, addFlags: [`side_trail_${meta.id}_${sectionNumber}`] },
+        result: "You read the ground correctly, find a hidden cash tin, and rejoin the trail ahead."
+      });
+    }
+    if (sectionNumber % 18 === 0 && sectionNumber + 2 <= 1000) {
+      choices.push({
+        label: "Help the wagon crew fix a broken axle.",
+        hint: "A Strength path with pay.",
+        target: { book: meta.id, section: sectionNumber + 2 },
+        requirements: { stats: { Strength: 10 + Math.min(meta.id, 6) } },
+        effects: { money: 22 + meta.id * 5, addFlags: [`wagon_job_${meta.id}_${sectionNumber}`] },
+        result: "The wagon rolls again, and the crew pays you in dusty silver coins."
+      });
     }
     if (sectionNumber % 25 === 0 && sectionNumber + 5 <= 1000) {
       choices.push({
         label: "Try a risky shortcut through rough country.",
         target: { book: meta.id, section: sectionNumber + 5 },
-        requirements: { stats: { Agility: 10 + Math.min(meta.id, 6) } }
+        requirements: { stats: { Agility: 10 + Math.min(meta.id, 6) } },
+        result: "You cut across rough country and come out several trail marks ahead."
       });
     }
     if (sectionNumber % 40 === 0 && sectionNumber + 3 <= 1000) {
@@ -902,24 +970,83 @@ window.GameData = {
         label: "A battle breaks out. Mount up and run before the dust closes in.",
         hint: "Requires any mount in your inventory.",
         target: { book: meta.id, section: sectionNumber + 3 },
-        requirements: { mount: true }
+        requirements: { mount: true },
+        result: "Your mount surges through the dust and carries you clear of the fight."
       });
     }
     if (nextUnlock && sectionNumber === nextUnlock.at) {
       choices.push({
         label: `Unlock and ride into ${bookById[nextUnlock.book].name}.`,
         target: { book: nextUnlock.book, section: 1 },
-        requirements: { books: [nextUnlock.book] }
+        requirements: { books: [nextUnlock.book] },
+        result: `A new trail opens into ${bookById[nextUnlock.book].name}.`
       });
     }
     if (sectionNumber === 1000 && meta.id < 11) {
       choices.push({
         label: `Finish this book and cross into ${bookById[meta.id + 1].name}.`,
         target: { book: meta.id + 1, section: 1 },
-        requirements: { books: [meta.id + 1] }
+        requirements: { books: [meta.id + 1] },
+        result: `You close this book and cross into ${bookById[meta.id + 1].name}.`
       });
     }
     return choices.length ? choices : [{ label: "Return to the first page of this book.", target: { book: meta.id, section: 1 } }];
+  }
+
+  function frontierScene(meta, sectionNumber) {
+    const scenes = [
+      {
+        name: "Dust Camp",
+        art: "Trail Camp Picture",
+        text: `A low campfire burns beside ${meta.name}. A tired drover shares rumors about a dry gulch, a missing cash box, and a trail that vanishes at noon.`,
+        action: "Break camp and follow the freshest hoofprints.",
+        result: "You stamp out the fire, follow fresh tracks, and find the next marked section.",
+        flag: `camp_${meta.id}_${sectionNumber}`
+      },
+      {
+        name: "Wanted Post",
+        art: "Wanted Poster Picture",
+        text: `A wanted poster snaps against a fence post. The face is blurred by dust, but the reward seal is real and the tracks beside it are fresh.`,
+        action: "Track the wanted rider to the next marker.",
+        result: "The tracks lead you onward and the poster gives you a name to remember.",
+        flag: `wanted_${meta.id}_${sectionNumber}`,
+        money: sectionNumber % 24 === 0 ? 20 + meta.id * 3 : 0
+      },
+      {
+        name: "Dry Well",
+        art: "Dry Well Picture",
+        text: `A stone well stands dry under the sun. Something glints at the bottom, but the wind makes the rope creak like it is warning you.`,
+        action: "Lower a rope into the well and check the trail beyond it.",
+        result: "You pull up a useful clue and move on before the heat gets worse.",
+        flag: `well_${meta.id}_${sectionNumber}`,
+        money: sectionNumber % 16 === 0 ? 12 + meta.id * 2 : 0
+      },
+      {
+        name: "Canyon Echo",
+        art: "Canyon Echo Picture",
+        text: `The canyon repeats every hoofbeat twice. Somewhere ahead, a rider whistles a tune that does not belong to any honest camp.`,
+        action: "Follow the echo until it reveals the next trail mark.",
+        result: "The false echo fades, and the real trail appears between two red stones.",
+        flag: `echo_${meta.id}_${sectionNumber}`
+      },
+      {
+        name: "Rail Spur",
+        art: "Rail Spur Picture",
+        text: `A rusted rail spur cuts across the dirt. Fresh boot prints cross it, and one rail spike has been hammered into the shape of an arrow.`,
+        action: "Follow the rail-spike arrow west.",
+        result: "The rail spur points true and saves you from a dead-end wash.",
+        flag: `rail_spur_${meta.id}_${sectionNumber}`
+      },
+      {
+        name: "Storm Line",
+        art: "Storm Line Picture",
+        text: `A blue-black storm drags its shadow over ${meta.name}. The air smells like rain, iron, and trouble riding fast.`,
+        action: "Beat the storm to the next trail shelter.",
+        result: "You reach cover as the storm breaks behind you.",
+        flag: `storm_${meta.id}_${sectionNumber}`
+      }
+    ];
+    return scenes[sectionNumber % scenes.length];
   }
 
   function makeWildWestMap(meta) {

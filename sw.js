@@ -1,4 +1,4 @@
-const cacheName = "journey-west-v14";
+const cacheName = "journey-west-v16";
 const filesToCache = [
   "./",
   "index.html",

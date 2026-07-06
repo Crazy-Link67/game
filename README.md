@@ -38,6 +38,7 @@ Opening `index.html` directly works for basic play, but install/offline PWA feat
 - Health, Strength, Wisdom, Agility, and Spirit, with weapons/items adding stat bonuses.
 - Frontier weapons and mounts in hero starting gear and section rewards.
 - Mounts unlock battle escape routes when a fight breaks out.
+- Trail markets appear in numbered sections so coins can be spent on weapons, mounts, and useful gear.
 - Eleven uniquely named frontier books with 1,000 numbered sections each.
 - End-of-section route choices with a boxed destination number and a sentence describing what happens when it is clicked.
 - A data-driven section engine with stat, item, flag, money, and book unlock requirements.
