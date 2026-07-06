@@ -141,6 +141,7 @@
     const hero = getHero(save.heroId);
     const displayName = characterName(save);
     const effectiveStats = getEffectiveStats(save);
+    const choices = visibleChoices(save, section);
     return `
       <main class="screen game-layout">
         ${screenToolbar()}
@@ -179,7 +180,7 @@
           <div class="story-scene" data-book="${save.currentBookId}" data-art="${escapeHtml(section.art || "Journey")}"></div>
           <p class="story-text">${escapeHtml(section.text)}</p>
           <div class="choices">
-            ${(section.choices || []).map((choice, index) => choiceButton(save, choice, index)).join("")}
+            ${choices.length ? choices.map(({ choice, index }) => choiceButton(save, choice, index)).join("") : '<p class="meta">No forward routes remain from this section. Use Maps, Undo, or return to the title screen.</p>'}
           </div>
           ${toastHtml()}
         </section>
@@ -220,6 +221,25 @@
       </div>
       ${rollButton}
     `;
+  }
+
+  function visibleChoices(save, section) {
+    return (section.choices || [])
+      .map((choice, index) => ({ choice, index }))
+      .filter(({ choice }) => !isGeneratedBacktrack(save, choice));
+  }
+
+  function isGeneratedBacktrack(save, choice) {
+    if (!choice || !choice.target) return false;
+    const targetBook = choiceTargetBook(save, choice);
+    const targetSection = Number(choice.target.section) || 0;
+    if (targetBook !== save.currentBookId || targetSection > save.currentSectionNumber) return false;
+    if (save.currentSectionNumber <= 8) return false;
+    return isGeneratedSectionTitle(getSection(save.currentBookId, save.currentSectionNumber));
+  }
+
+  function isGeneratedSectionTitle(section) {
+    return /^Section \d+:/i.test(section && section.title || "");
   }
 
   function renderLoad() {
@@ -665,6 +685,7 @@
     const section = save && getSection(save.currentBookId, save.currentSectionNumber);
     const choice = section && section.choices[choiceIndex];
     if (!save || !choice) return setView("game", "That path is not available.");
+    if (isGeneratedBacktrack(save, choice)) return setView("game", "That old route loops backward, so it has been closed.");
     const boost = getChoiceBoost(save, choiceIndex);
     const check = checkRequirements(save, choice.requirements, boost);
     if (!check.ok) return setView("game", check.reason);
@@ -681,6 +702,7 @@
     const section = save && getSection(save.currentBookId, save.currentSectionNumber);
     const choice = section && section.choices[choiceIndex];
     if (!save || !choice) return setView("game", "That path is not available.");
+    if (isGeneratedBacktrack(save, choice)) return setView("game", "That old route loops backward, so it has been closed.");
     const check = checkRequirements(save, choice.requirements);
     if (!check.canRoll) return setView("game", "A die roll can only help when one stat is too low.");
     const amount = Math.floor(Math.random() * 6) + 1;

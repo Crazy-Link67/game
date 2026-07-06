@@ -570,12 +570,6 @@ window.GameData = {
         target: { book: book.id, section: sectionNumber + 1 }
       });
     }
-    if (sectionNumber > 1) {
-      choices.push({
-        label: `Return to Section ${sectionNumber - 1}.`,
-        target: { book: book.id, section: sectionNumber - 1 }
-      });
-    }
     if (sectionNumber % 25 === 0 && sectionNumber + 5 <= book.sectionCount) {
       choices.push({
         label: `Take a risky shortcut to Section ${sectionNumber + 5}.`,
@@ -895,9 +889,6 @@ window.GameData = {
     const choices = [];
     if (sectionNumber < 1000) {
       choices.push({ label: `Ride on to the next marked stretch of ${meta.name}.`, target: { book: meta.id, section: sectionNumber + 1 } });
-    }
-    if (sectionNumber > 1) {
-      choices.push({ label: "Turn your horse around and check the previous trail note.", target: { book: meta.id, section: sectionNumber - 1 } });
     }
     if (sectionNumber % 25 === 0 && sectionNumber + 5 <= 1000) {
       choices.push({
