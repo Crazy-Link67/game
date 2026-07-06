@@ -168,6 +168,15 @@
         font: inherit;
       }
 
+      .version-footer {
+        padding: 8px 0 0;
+        color: var(--muted);
+        font: 700 0.76rem/1.2 Arial, sans-serif;
+        letter-spacing: 0.08em;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
       @media (max-width: 720px) {
         header {
           grid-template-columns: 1fr;
@@ -223,11 +232,14 @@
         <h2>Books And Sections</h2>
         <div id="books"></div>
       </section>
+      <footer class="version-footer">Version <span id="version">dev</span></footer>
     </main>
 
+    <script src="version.js"></script>
     <script src="data.js"></script>
     <script>
       const data = window.GameData;
+      document.querySelector("#version").textContent = window.GameVersion || "dev";
       const searchInput = document.querySelector("#search");
       const summary = document.querySelector("#summary");
       const booksNode = document.querySelector("#books");

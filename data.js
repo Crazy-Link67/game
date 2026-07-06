@@ -926,6 +926,22 @@ window.GameData = {
         result: scene.result
       });
     }
+    if (sectionNumber + 2 <= 1000) {
+      choices.push({
+        label: "Take the side trail marked with a bent horseshoe.",
+        hint: "A steady alternate route.",
+        target: { book: meta.id, section: sectionNumber + 2 },
+        result: "The bent horseshoe trail avoids the obvious road and brings you to a different marker."
+      });
+    }
+    if (sectionNumber + 4 <= 1000) {
+      choices.push({
+        label: "Ride toward the far landmark instead of the nearest trail mark.",
+        hint: "A bolder forward route.",
+        target: { book: meta.id, section: sectionNumber + 4 },
+        result: "You aim for the far landmark and skip past a stretch of empty road."
+      });
+    }
     if (sectionNumber % 10 === 0 && sectionNumber < 1000) {
       const good = marketGoods[(meta.id + sectionNumber / 10) % marketGoods.length];
       choices.push({
@@ -947,6 +963,16 @@ window.GameData = {
         result: "You read the ground correctly, find a hidden cash tin, and rejoin the trail ahead."
       });
     }
+    if (sectionNumber % 14 === 0 && sectionNumber + 3 <= 1000) {
+      choices.push({
+        label: "Read the outlaw's coded trail sign carved into a fence rail.",
+        hint: "Requires Wisdom and can reveal a safer route.",
+        target: { book: meta.id, section: sectionNumber + 3 },
+        requirements: { stats: { Wisdom: 12 + Math.min(meta.id, 7) } },
+        effects: { money: 12 + meta.id * 3, addFlags: [`decoded_sign_${meta.id}_${sectionNumber}`] },
+        result: "You crack the code, avoid an ambush marker, and pocket a small reward hidden under the rail."
+      });
+    }
     if (sectionNumber % 18 === 0 && sectionNumber + 2 <= 1000) {
       choices.push({
         label: "Help the wagon crew fix a broken axle.",
@@ -957,12 +983,42 @@ window.GameData = {
         result: "The wagon rolls again, and the crew pays you in dusty silver coins."
       });
     }
+    if (sectionNumber % 20 === 0 && sectionNumber + 3 <= 1000) {
+      choices.push({
+        label: "Stand your ground when a bandit tests your nerve.",
+        hint: "Requires Spirit and pays if you hold steady.",
+        target: { book: meta.id, section: sectionNumber + 3 },
+        requirements: { stats: { Spirit: 12 + Math.min(meta.id, 7) } },
+        effects: { money: 16 + meta.id * 4, addFlags: [`stood_ground_${meta.id}_${sectionNumber}`] },
+        result: "The bandit blinks first, tosses down hush money, and lets you pass."
+      });
+    }
+    if (sectionNumber % 22 === 0 && sectionNumber + 4 <= 1000) {
+      choices.push({
+        label: "Climb the red rock wall to scout the country ahead.",
+        hint: "Requires Health for a hard climb.",
+        target: { book: meta.id, section: sectionNumber + 4 },
+        requirements: { stats: { Health: 24 + meta.id } },
+        effects: { addFlags: [`scouted_high_ground_${meta.id}_${sectionNumber}`] },
+        result: "You climb until your lungs burn and spot a cleaner route from above."
+      });
+    }
     if (sectionNumber % 25 === 0 && sectionNumber + 5 <= 1000) {
       choices.push({
         label: "Try a risky shortcut through rough country.",
         target: { book: meta.id, section: sectionNumber + 5 },
         requirements: { stats: { Agility: 10 + Math.min(meta.id, 6) } },
         result: "You cut across rough country and come out several trail marks ahead."
+      });
+    }
+    if (sectionNumber % 28 === 0 && sectionNumber + 4 <= 1000) {
+      choices.push({
+        label: "Force open a rusted strongbox beside the trail.",
+        hint: "Requires Strength and can pay well.",
+        target: { book: meta.id, section: sectionNumber + 4 },
+        requirements: { stats: { Strength: 13 + Math.min(meta.id, 7) } },
+        effects: { money: 28 + meta.id * 6, addFlags: [`opened_strongbox_${meta.id}_${sectionNumber}`] },
+        result: "The strongbox gives way with a shriek of rust and spills out old payroll coins."
       });
     }
     if (sectionNumber % 40 === 0 && sectionNumber + 3 <= 1000) {

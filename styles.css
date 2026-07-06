@@ -876,6 +876,17 @@ select {
   overflow-wrap: anywhere;
 }
 
+.version-footer {
+  width: min(1120px, calc(100% - 32px));
+  margin: -18px auto 0;
+  padding: 0 0 18px;
+  color: var(--muted);
+  font: 700 0.76rem/1.2 Arial, sans-serif;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   body:not(.reduce-motion) button,
   body:not(.reduce-motion) .hero-card,

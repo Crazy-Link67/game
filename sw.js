@@ -1,10 +1,11 @@
-const cacheName = "journey-west-v16";
+const cacheName = "journey-west-v18";
 const filesToCache = [
   "./",
   "index.html",
   "game-reference.html",
   "pictures.css",
   "styles.css",
+  "version.js",
   "data.js",
   "app.js",
   "manifest.webmanifest",

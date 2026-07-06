@@ -5,6 +5,7 @@
   const settingsKey = "jttw:settings";
   const activeSaveKey = "jttw:activeSaveId";
   const onlineLocalKey = "jttw:onlineLocal";
+  const appVersion = window.GameVersion || "dev";
   const defaultSettings = {
     theme: "light",
     fontSize: "16",
@@ -59,7 +60,7 @@
       online: renderOnline,
       exit: renderExit
     };
-    app.innerHTML = (screens[state.view] || renderTitle)();
+    app.innerHTML = `${(screens[state.view] || renderTitle)()}${versionFooter()}`;
   }
 
   function renderTitle() {
@@ -1341,6 +1342,10 @@
     const message = state.toast;
     state.toast = "";
     return message ? `<p class="toast">${escapeHtml(message)}</p>` : "";
+  }
+
+  function versionFooter() {
+    return `<footer class="version-footer">Version ${escapeHtml(appVersion)}</footer>`;
   }
 
   function addUnique(target, values = []) {

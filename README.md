@@ -53,6 +53,7 @@ Opening `index.html` directly works for basic play, but install/offline PWA feat
 - `game-reference.html` shows the logo, heroes, gear, maps, codeword, books, and all generated sections.
 - `pictures.css` stores the reusable picture-panel styles used by the reference file.
 - `assets/frontier-picture-atlas.png` provides the realistic picture panels for the reference page.
+- `version.js` stores the shared `yy.mm.dd.hh` version shown at the bottom of the game and reference pages.
 
 ## Codeword
 
