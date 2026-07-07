@@ -367,7 +367,7 @@
         return `
           <article class="card section-entry">
             ${pictureHtml("story", section.art || section.title)}
-            <h3>${escapeHtml(section.title)}</h3>
+            <h3>Section ${sectionNumber(section)}: ${escapeHtml(section.title)}</h3>
             <p class="muted">Art: ${escapeHtml(section.art || "None")}</p>
             <p>${escapeHtml(section.text || "")}</p>
             <p><strong>Effects:</strong> ${formatObject(section.effects || {}) || "None"}</p>
@@ -378,6 +378,8 @@
 
       function sectionMatches(section, query) {
         const text = [
+          `section ${sectionNumber(section)}`,
+          String(sectionNumber(section)),
           section.title,
           section.art,
           section.text,
@@ -388,6 +390,8 @@
       }
 
       function sectionNumber(section) {
+        const directNumber = Number(section && section.number);
+        if (directNumber) return directNumber;
         const match = String(section.title || "").match(/section\s+(\d+)/i);
         return match ? Number(match[1]) : 0;
       }

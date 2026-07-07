@@ -565,9 +565,11 @@ window.GameData = {
     }
 
     return {
-      title: `${names[book.id]} - Section ${sectionNumber}`,
+      number: sectionNumber,
+      generated: true,
+      title: names[book.id],
       art: arts[book.id],
-      text: `Section ${sectionNumber} of ${book.title}. The road continues through ${names[book.id]}, with coins, choices, and signs for later hand-written story events.`,
+      text: `The road continues through ${names[book.id]}, with coins, choices, and signs for later hand-written story events.`,
       effects,
       choices: generatedChoices(book, sectionNumber, unlock)
     };
@@ -803,7 +805,8 @@ window.GameData = {
 
   function addOpeningTrail(sections) {
     sections[1] = {
-      title: "Section 1: The Red Mesa Signpost",
+      number: 1,
+      title: "The Red Mesa Signpost",
       art: "Red Mesa Picture",
       text: "A sunburned signpost leans beside a dry trail. One arrow points to the sheriff's office, one to a broken rail bridge, and one to a cactus flat where coyotes are already laughing.",
       effects: { addFlags: ["red_mesa_seen"], money: 3 },
@@ -814,7 +817,8 @@ window.GameData = {
       ]
     };
     sections[2] = {
-      title: "Section 2: The Sheriff's Coffee",
+      number: 2,
+      title: "The Sheriff's Coffee",
       art: "Sheriff Office Picture",
       text: "The sheriff pours coffee black enough to float a horseshoe. He slides you a brass rail token and points toward the Moonlit Rio ferry.",
       effects: { addItems: ["brass rail token", "marshal's spare revolver"], addFlags: ["sheriff_trusts_you"], unlockBooks: [2], upgradePoints: 1, money: 12 },
@@ -824,7 +828,8 @@ window.GameData = {
       ]
     };
     sections[3] = {
-      title: "Section 3: The Broken Rail Bridge",
+      number: 3,
+      title: "The Broken Rail Bridge",
       art: "Rail Bridge Picture",
       text: "The bridge groans like a tired fiddle. Halfway across, you spot a lockbox wedged below the rails.",
       effects: { addFlags: ["rail_bridge_crossed"], money: 5 },
@@ -834,7 +839,8 @@ window.GameData = {
       ]
     };
     sections[4] = {
-      title: "Section 4: Cactus Flats",
+      number: 4,
+      title: "Cactus Flats",
       art: "Cactus Flat Picture",
       text: "The cactus field is full of pale blossoms and suspicious silence. Under a flat stone you find a green river token wrapped in rawhide.",
       effects: { addItems: ["green river token", "desert pony"], addFlags: ["cactus_flats_found"], upgradePoints: 1, money: 8 },
@@ -844,7 +850,8 @@ window.GameData = {
       ]
     };
     sections[5] = {
-      title: "Section 5: The Rail Lockbox",
+      number: 5,
+      title: "The Rail Lockbox",
       art: "Lockbox Picture",
       text: "Inside the lockbox sits a copper map nail and a folded wanted notice for a bandit called the Paper Saint.",
       effects: { addItems: ["copper map nail", "pepperbox pistol"], addFlags: ["paper_saint_notice"], unlockBooks: [2], money: 18 },
@@ -854,7 +861,8 @@ window.GameData = {
       ]
     };
     sections[6] = {
-      title: "Section 6: The Paper Map Opens",
+      number: 6,
+      title: "The Paper Map Opens",
       art: "Paper Map Picture",
       text: "Your map crackles like dry leaves. Ink roads spread west, and the second book title glows beside a sketch of black water.",
       choices: [
@@ -864,7 +872,8 @@ window.GameData = {
       ]
     };
     sections[7] = {
-      title: "Section 7: The Hidden Ford",
+      number: 7,
+      title: "The Hidden Ford",
       art: "Hidden Ford Picture",
       text: "Moonlight catches a shallow crossing nobody marked. The river token warms in your glove and the far bank opens.",
       effects: { addFlags: ["hidden_ford_found"], unlockBooks: [2], money: 10 },
@@ -873,7 +882,8 @@ window.GameData = {
       ]
     };
     sections[8] = {
-      title: "Section 8: The West Wind Spur",
+      number: 8,
+      title: "The West Wind Spur",
       art: "West Wind Picture",
       text: "A red thread is tied to a horseshoe nail behind the signpost. It points toward a high white pass where the wind sounds like a train whistle.",
       effects: { addFlags: ["west_wind_spur_found"], unlockBooks: [3], money: 14 },
@@ -907,7 +917,9 @@ window.GameData = {
     }
     const isMarket = sectionNumber % 10 === 0;
     return {
-      title: `Section ${sectionNumber}: ${meta.name}`,
+      number: sectionNumber,
+      generated: true,
+      title: isMarket ? `${meta.name} Trail Market` : `${scene.name} on ${meta.name}`,
       art: scene.art,
       text: isMarket
         ? `The page shows ${meta.name} in sepia ink: hoofprints, dust, and a market wagon under a hard western sky. Traders lift canvas flaps over weapons, mounts, and useful trail goods.`

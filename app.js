@@ -34,6 +34,7 @@
   });
 
   app.addEventListener("click", onClick);
+  app.addEventListener("keydown", onKeydown);
   app.addEventListener("submit", onSubmit);
   app.addEventListener("change", onChange);
 
@@ -207,22 +208,23 @@
     const boost = getChoiceBoost(save, index);
     const check = checkRequirements(save, choice.requirements, boost);
     const lockedClass = check.ok ? "" : " locked";
-    const disabled = check.ok ? "" : " disabled";
-    const reason = check.ok && boost ? `Rolled +${boost.amount} ${boost.stat}. Use this action now.` : (check.ok ? (choice.hint || choice.result || "Travel this route.") : check.reason);
+    const reason = check.ok && boost
+      ? `Rolled +${boost.amount} ${boost.stat}. Use this action now.`
+      : (check.ok ? (choice.hint || choice.result || "Travel this route.") : `${check.reason}${check.canRoll ? " Roll d6 to try this action anyway." : ""}`);
     const rollButton = !check.ok && check.canRoll
-      ? `<button class="secondary" data-action="roll-stat" data-choice-index="${index}">Roll d6 for ${escapeHtml(check.stat)}</button>`
+      ? `<button class="secondary choice-roll" data-action="roll-stat" data-choice-index="${index}">Roll d6 for ${escapeHtml(check.stat)}</button>`
       : "";
     return `
-      <div class="choice-row${lockedClass}">
-        <button class="choice-number" data-action="choose" data-choice-index="${index}"${disabled} aria-label="Go to ${escapeHtml(choiceTargetLabel(choice))}">
-          ${escapeHtml(choiceTargetLabel(choice))}
+      <div class="choice-row${lockedClass}" data-action="choose" data-choice-index="${index}" role="button" tabindex="0">
+        <button class="choice-number" data-action="choose" data-choice-index="${index}" aria-disabled="${check.ok ? "false" : "true"}" aria-label="Go to ${escapeHtml(choiceTargetLabel(save, choice))}">
+          ${escapeHtml(choiceTargetLabel(save, choice))}
         </button>
         <p>
           <strong>${escapeHtml(choice.label)}</strong>
           <span>${escapeHtml(reason)}</span>
+          ${rollButton}
         </p>
       </div>
-      ${rollButton}
     `;
   }
 
@@ -242,7 +244,7 @@
   }
 
   function isGeneratedSectionTitle(section) {
-    return /^Section \d+:/i.test(section && section.title || "");
+    return Boolean(section && section.generated);
   }
 
   function renderLoad() {
@@ -589,6 +591,14 @@
     if (action === "refresh-online") return refreshOnline();
     if (action === "export-saves") return exportSaves();
     if (action === "import-saves") return promptImportSaves();
+  }
+
+  function onKeydown(event) {
+    if (!["Enter", " "].includes(event.key)) return;
+    const row = event.target.closest(".choice-row[data-action='choose']");
+    if (!row || event.target.closest("button, input, select, textarea")) return;
+    event.preventDefault();
+    choose(Number(row.dataset.choiceIndex));
   }
 
   function onSubmit(event) {
@@ -1026,7 +1036,7 @@
     if (!save || typeof save !== "object") return null;
     const hero = getHero(save.heroId);
     const now = new Date().toISOString();
-    const baseStats = { ...buildHeroStats(hero), ...(save.stats || {}) };
+    const baseStats = normalizeStats(hero, save.stats);
     const inventory = Array.isArray(save.inventory) ? save.inventory : hero.startingItems;
     const requestedBook = Number(save.currentBookId) || 1;
     const book = getBook(requestedBook);
@@ -1042,8 +1052,8 @@
       currentSectionNumber: sectionNumber,
       stats: baseStats,
       inventory: unique(inventory),
-      money: Number(save.money) || 0,
-      totalMoneyCollected: Number(save.totalMoneyCollected) || Number(save.money) || 0,
+      money: Math.max(0, Number(save.money) || 0),
+      totalMoneyCollected: Math.max(0, Number(save.totalMoneyCollected) || 0, Number(save.money) || 0),
       flags: unique(Array.isArray(save.flags) ? save.flags : []),
       codewords: unique(Array.isArray(save.codewords) ? save.codewords : []),
       unlockedBooks,
@@ -1112,6 +1122,16 @@
     const stats = { ...data.baseStats };
     Object.entries(hero.statModifiers).forEach(([stat, amount]) => {
       stats[stat] = (stats[stat] || 0) + amount;
+    });
+    return stats;
+  }
+
+  function normalizeStats(hero, savedStats) {
+    const stats = buildHeroStats(hero);
+    if (!savedStats || typeof savedStats !== "object") return stats;
+    statNames.forEach((stat) => {
+      const value = Number(savedStats[stat]);
+      if (Number.isFinite(value)) stats[stat] = Math.max(0, Math.round(value));
     });
     return stats;
   }
@@ -1387,9 +1407,11 @@
     return `${bookId}:${sectionNumber}`;
   }
 
-  function choiceTargetLabel(choice) {
+  function choiceTargetLabel(save, choice) {
     if (!choice || !choice.target) return "?";
-    return choice.target.book ? `B${choice.target.book}-${choice.target.section}` : String(choice.target.section);
+    const targetBook = choiceTargetBook(save, choice);
+    const targetSection = Number(choice.target.section) || "?";
+    return targetBook === save.currentBookId ? String(targetSection) : `B${targetBook} S${targetSection}`;
   }
 
   function choiceTargetBook(save, choice) {
@@ -1441,7 +1463,7 @@
     const choices = visibleChoices(save, section)
       .map(({ choice, index }) => {
         const check = checkRequirements(save, choice.requirements, getChoiceBoost(save, index));
-        const target = choiceTargetLabel(choice);
+        const target = choiceTargetLabel(save, choice);
         const result = check.ok ? (choice.hint || choice.result || "Travel this route.") : check.reason;
         return `Section ${target}. ${choice.label}. ${result}`;
       })
