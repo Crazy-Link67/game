@@ -1,13 +1,15 @@
-const cacheName = "journey-west-v23";
+const cacheName = "journey-west-v25";
 const filesToCache = [
   "./",
   "index.html",
   "game-reference.html",
-  "pictures.css",
-  "styles.css",
-  "version.js",
-  "data.js",
-  "app.js",
+  "styles/pictures.css",
+  "styles/styles.css",
+  "scripts/version.js",
+  "scripts/data-core.js",
+  "scripts/story-data.js",
+  "scripts/engine.js",
+  "scripts/app.js",
   "manifest.webmanifest",
   "assets/compass.svg",
   "assets/frontier-picture-atlas.png"

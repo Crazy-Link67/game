@@ -51,10 +51,30 @@ Opening `index.html` directly works for basic play, but install/offline PWA feat
 - Device-local saves, settings, inventory, money, codeword, map progress, and stat upgrades.
 - Service worker and manifest for offline install support.
 - `game-reference.html` shows the logo, heroes, gear, maps, codeword, books, and all generated sections.
-- `pictures.css` stores the reusable picture-panel styles used by the reference file.
+- `styles/pictures.css` stores the reusable picture-panel styles used by the reference file.
+- `styles/styles.css` stores the main app layout, parchment, map, and story scene styles.
 - `assets/frontier-picture-atlas.png` provides the realistic picture panels for the reference page.
-- `version.js` stores the shared `yy.mm.dd.hh` version shown at the bottom of the game and reference pages.
+- `scripts/data-core.js` stores the small shared data shell: base stats, codeword bootstrap, and empty collections.
+- `scripts/story-data.js` owns the Wild West story pack, hero/gear lists, maps, book metadata, and generated sections.
+- `scripts/engine.js` owns reusable game rules: stat math, item bonuses, requirements, section entry, effects, codeword max-out, and target resolution.
+- `scripts/app.js` owns browser UI, rendering, storage, online demo mode, import/export, text to speech, and screen navigation.
+- `scripts/version.js` stores the shared `yy.mm.dd.hh` version shown at the bottom of the game and reference pages.
+- `data.js` is kept only as a compatibility breadcrumb; active runtime data is loaded from `scripts/data-core.js` and `scripts/story-data.js`.
 
 ## Codeword
 
 `bloodhound6721` maxes out the current frontier hero, sets money to 999999 coins, unlocks every book, reveals numbered map sections, and grants all weapons, mounts, legendary gear, and sample route rewards.
+
+## Architecture Notes
+
+The app intentionally has no build step. Script order matters:
+
+```html
+scripts/version.js
+scripts/data-core.js
+scripts/story-data.js
+scripts/engine.js
+scripts/app.js
+```
+
+Keep story content and generated book routes in `scripts/story-data.js`. Keep reusable rules in `scripts/engine.js`. Keep rendering and browser APIs in `scripts/app.js`. Keep CSS in `styles/` and static media in `assets/`. This split keeps the engine testable, prevents the story data from making the UI file huge, and keeps offline/PWA caching simple.

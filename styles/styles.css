@@ -135,10 +135,10 @@ button:disabled {
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(42, 26, 16, 0.02), rgba(42, 26, 16, 0.12)),
-    url("assets/frontier-picture-atlas.png") left top / 214% 214% no-repeat,
+    url("../assets/frontier-picture-atlas.png") left top / 214% 214% no-repeat,
     radial-gradient(circle at 50% 18%, rgba(255, 238, 171, 0.86) 0 5.2rem, transparent 5.4rem),
     radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.32), transparent 14rem),
-    url("assets/compass.svg") center 16% / 190px 190px no-repeat,
+    url("../assets/compass.svg") center 16% / 190px 190px no-repeat,
     repeating-linear-gradient(98deg, transparent 0 14px, rgba(255, 255, 255, 0.12) 14px 16px, transparent 16px 48px),
     linear-gradient(180deg, #f2cf77 0%, #d4873e 32%, #9b6841 62%, #3b2418 100%);
   background-blend-mode: soft-light, multiply, normal, normal, normal, normal, normal;
@@ -394,7 +394,7 @@ h3 {
   border: 1px solid color-mix(in srgb, var(--line), #2a1a10 16%);
   background:
     linear-gradient(180deg, var(--photo-wash), rgba(42, 26, 16, 0.24)),
-    url("assets/frontier-picture-atlas.png") var(--scene-photo-position, right bottom) / 210% 210% no-repeat,
+    url("../assets/frontier-picture-atlas.png") var(--scene-photo-position, right bottom) / 210% 210% no-repeat,
     var(--scene-texture),
     repeating-linear-gradient(135deg, transparent 0 18px, rgba(255, 255, 255, 0.12) 18px 20px),
     linear-gradient(120deg, rgba(185, 67, 47, 0.15), rgba(47, 117, 105, 0.2));
@@ -708,7 +708,7 @@ select {
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(255, 235, 183, 0.18), rgba(42, 26, 16, 0.26)),
-    url("assets/frontier-picture-atlas.png") left bottom / 212% 212% no-repeat,
+    url("../assets/frontier-picture-atlas.png") left bottom / 212% 212% no-repeat,
     var(--map-texture),
     repeating-linear-gradient(90deg, transparent 0 24px, rgba(255, 255, 255, 0.1) 24px 25px),
     linear-gradient(135deg, color-mix(in srgb, var(--accent-2), transparent 20%), color-mix(in srgb, var(--accent-3), transparent 18%));

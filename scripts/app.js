@@ -1,6 +1,7 @@
 (function () {
   const app = document.querySelector("#app");
   const data = window.GameData;
+  const engine = window.GameEngine;
   const savesKey = "jttw:saves";
   const settingsKey = "jttw:settings";
   const activeSaveKey = "jttw:activeSaveId";
@@ -14,7 +15,7 @@
     playerName: "Wandering Hero",
     onlineApiUrl: ""
   };
-  const statNames = Object.keys(data.baseStats);
+  const statNames = engine.statNames;
   let deferredInstallPrompt = null;
   let state = {
     view: "title",
@@ -910,36 +911,11 @@
   }
 
   function enterSection(save, bookId, sectionNumber) {
-    const section = getSection(bookId, sectionNumber);
-    if (!section) return;
-    save.currentBookId = bookId;
-    save.currentSectionNumber = sectionNumber;
-    if (!save.unlockedBooks.includes(bookId)) save.unlockedBooks.push(bookId);
-    const key = sectionKey(bookId, sectionNumber);
-    if (!save.visitedSections.includes(key)) {
-      applyEffects(save, section.effects);
-      save.visitedSections.push(key);
-    }
-    save.updatedAt = new Date().toISOString();
+    engine.enterSection(save, bookId, sectionNumber);
   }
 
   function applyEffects(save, effects = {}) {
-    addUnique(save.inventory, effects.addItems);
-    addUnique(save.flags, effects.addFlags);
-    addUnique(save.codewords, effects.addCodewords);
-    addUnique(save.unlockedBooks, effects.unlockBooks);
-    if (effects.maxEverything) maxOutSave(save);
-    if (effects.spendMoney) spendMoney(save, effects.spendMoney);
-    if (effects.money) addMoney(save, effects.money);
-    if (effects.statChanges) {
-      Object.entries(effects.statChanges).forEach(([stat, amount]) => {
-        if (statNames.includes(stat)) save.stats[stat] += amount;
-      });
-    }
-    if (effects.upgradePoints) save.upgradePoints += effects.upgradePoints;
-    if (effects.removeItems) {
-      save.inventory = save.inventory.filter((item) => !effects.removeItems.includes(item));
-    }
+    engine.applyEffects(save, effects);
   }
 
   function undoLastAction() {
@@ -978,49 +954,7 @@
   }
 
   function checkRequirements(save, requirements = {}, boost = null) {
-    if (!requirements) return { ok: true, reason: "" };
-    const effectiveStats = getEffectiveStats(save);
-    if (requirements.stats) {
-      const statFailures = Object.entries(requirements.stats).filter(([stat, value]) => {
-        const boostedValue = (effectiveStats[stat] || 0) + (boost && boost.stat === stat ? boost.amount : 0);
-        return boostedValue < value;
-      });
-      if (statFailures.length) {
-        const [stat, value] = statFailures[0];
-        return {
-          ok: false,
-          reason: `Requires ${stat} ${value}.`,
-          canRoll: statFailures.length === 1,
-          stat,
-          required: value
-        };
-      }
-    }
-    if (requirements.mount && !hasMount(save)) {
-      return { ok: false, reason: "Requires a mount to run from this battle." };
-    }
-    if (requirements.money && (save.money || 0) < requirements.money) {
-      return { ok: false, reason: `Requires ${requirements.money} coins.` };
-    }
-    if (requirements.notItems) {
-      const owned = requirements.notItems.find((entry) => save.inventory.includes(entry));
-      if (owned) return { ok: false, reason: `Already owns ${owned}.` };
-    }
-    for (const [key, label, source] of [
-      ["items", "item", save.inventory],
-      ["flags", "flag", save.flags],
-      ["codewords", "codeword", save.codewords]
-    ]) {
-      if (requirements[key]) {
-        const missing = requirements[key].find((entry) => !source.includes(entry));
-        if (missing) return { ok: false, reason: `Requires ${label}: ${missing}.` };
-      }
-    }
-    if (requirements.books) {
-      const missingBook = requirements.books.find((bookId) => !save.unlockedBooks.includes(bookId));
-      if (missingBook) return { ok: false, reason: `Requires Book ${missingBook} unlocked.` };
-    }
-    return { ok: true, reason: "" };
+    return engine.checkRequirements(save, requirements, boost);
   }
 
   function getSaves() {
@@ -1106,50 +1040,31 @@
   }
 
   function getHero(heroId) {
-    return data.heroes.find((hero) => hero.id === heroId) || data.heroes[0];
+    return engine.getHero(heroId);
   }
 
   function getBook(bookId) {
-    return data.books.find((book) => book.id === Number(bookId)) || data.books[0];
+    return engine.getBook(bookId);
   }
 
   function getSection(bookId, sectionNumber) {
-    const book = getBook(bookId);
-    return book.sections[sectionNumber] || null;
+    return engine.getSection(bookId, sectionNumber);
   }
 
   function buildHeroStats(hero) {
-    const stats = { ...data.baseStats };
-    Object.entries(hero.statModifiers).forEach(([stat, amount]) => {
-      stats[stat] = (stats[stat] || 0) + amount;
-    });
-    return stats;
+    return engine.buildHeroStats(hero);
   }
 
   function normalizeStats(hero, savedStats) {
-    const stats = buildHeroStats(hero);
-    if (!savedStats || typeof savedStats !== "object") return stats;
-    statNames.forEach((stat) => {
-      const value = Number(savedStats[stat]);
-      if (Number.isFinite(value)) stats[stat] = Math.max(0, Math.round(value));
-    });
-    return stats;
+    return engine.normalizeStats(hero, savedStats);
   }
 
   function getEffectiveStats(save) {
-    return applyItemStatModifiers(save.stats || {}, save.inventory || []);
+    return engine.getEffectiveStats(save);
   }
 
   function applyItemStatModifiers(stats, inventory = []) {
-    const result = { ...stats };
-    inventory.forEach((item) => {
-      const modifiers = data.itemStatModifiers && data.itemStatModifiers[item];
-      if (!modifiers) return;
-      Object.entries(modifiers).forEach(([stat, amount]) => {
-        if (statNames.includes(stat)) result[stat] = (result[stat] || 0) + amount;
-      });
-    });
-    return result;
+    return engine.applyItemStatModifiers(stats, inventory);
   }
 
   function gearBonusSummary(save) {
@@ -1168,35 +1083,19 @@
   }
 
   function hasMount(save) {
-    const mounts = data.mounts || [];
-    return (save.inventory || []).some((item) => mounts.includes(item));
+    return engine.hasMount(save);
   }
 
   function maxOutSave(save) {
-    statNames.forEach((stat) => {
-      save.stats[stat] = 99;
-    });
-    save.upgradePoints = 99;
-    save.money = 999999;
-    save.totalMoneyCollected = Math.max(save.totalMoneyCollected || 0, 999999);
-    addUnique(save.unlockedBooks, data.books.map((book) => book.id));
-    addUnique(save.inventory, data.weapons || []);
-    addUnique(save.inventory, data.mounts || []);
-    addUnique(save.inventory, data.legendaryItems || []);
-    addUnique(save.inventory, collectEffectValues("addItems"));
-    addUnique(save.flags, collectEffectValues("addFlags"));
-    addUnique(save.visitedSections, data.books.flatMap((book) =>
-      Object.keys(book.sections).map((sectionNumber) => sectionKey(book.id, sectionNumber))
-    ));
+    engine.maxOutSave(save);
   }
 
   function addMoney(save, amount) {
-    save.money = (save.money || 0) + amount;
-    if (amount > 0) save.totalMoneyCollected = (save.totalMoneyCollected || 0) + amount;
+    engine.addMoney(save, amount);
   }
 
   function spendMoney(save, amount) {
-    save.money = Math.max(0, (save.money || 0) - amount);
+    engine.spendMoney(save, amount);
   }
 
   async function fetchOnlineData(settings) {
@@ -1324,14 +1223,7 @@
   }
 
   function collectEffectValues(effectName) {
-    const values = [];
-    data.books.forEach((book) => {
-      Object.values(book.sections).forEach((section) => {
-        addUnique(values, section.effects && section.effects[effectName]);
-        (section.choices || []).forEach((choice) => addUnique(values, choice.effects && choice.effects[effectName]));
-      });
-    });
-    return values;
+    return engine.collectEffectValues(effectName);
   }
 
   function getChoiceBoost(save, choiceIndex) {
@@ -1383,13 +1275,11 @@
   }
 
   function addUnique(target, values = []) {
-    values.forEach((value) => {
-      if (!target.includes(value)) target.push(value);
-    });
+    engine.addUnique(target, values);
   }
 
   function unique(values) {
-    return [...new Set(values)];
+    return engine.unique(values);
   }
 
   function formatList(values) {
@@ -1404,7 +1294,7 @@
   }
 
   function sectionKey(bookId, sectionNumber) {
-    return `${bookId}:${sectionNumber}`;
+    return engine.sectionKey(bookId, sectionNumber);
   }
 
   function choiceTargetLabel(save, choice) {
@@ -1415,7 +1305,7 @@
   }
 
   function choiceTargetBook(save, choice) {
-    return Number(choice && choice.target && choice.target.book) || save.currentBookId;
+    return engine.choiceTargetBook(save, choice);
   }
 
   function toggleTextToSpeech() {

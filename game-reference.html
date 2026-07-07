@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Journey to the West: Frontier Trails Reference</title>
     <link rel="icon" href="assets/compass.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="pictures.css">
+    <link rel="stylesheet" href="styles/pictures.css">
     <style>
       :root {
         --bg: #ead5aa;
@@ -252,8 +252,9 @@
       <footer class="version-footer">Version <span id="version">dev</span></footer>
     </main>
 
-    <script src="version.js"></script>
-    <script src="data.js"></script>
+    <script src="scripts/version.js"></script>
+    <script src="scripts/data-core.js"></script>
+    <script src="scripts/story-data.js"></script>
     <script>
       const data = window.GameData;
       document.querySelector("#version").textContent = window.GameVersion || "dev";
